@@ -113,21 +113,21 @@ export const UsersManagement = () => {
   const getRoleBadge = (role) => {
     if (role === 'ADMIN') {
       return (
-        <span className="badge" style={{ backgroundColor: '#f3e8ff', color: '#6b21a8' }}>
-          <Shield size={12} /> Admin
+        <span className="badge" style={{ backgroundColor: 'var(--purple-light)', color: 'var(--purple-text)', border: '1px solid var(--purple-border)' }}>
+          <Shield size={11} strokeWidth={2.5} /> Admin
         </span>
       );
     }
     if (role === 'SUPPORT_AGENT') {
       return (
-        <span className="badge" style={{ backgroundColor: '#dbeafe', color: '#1e40af' }}>
-          <Headphones size={12} /> Support Agent
+        <span className="badge" style={{ backgroundColor: 'var(--primary-light)', color: '#1e40af', border: '1px solid var(--primary-border)' }}>
+          <Headphones size={11} strokeWidth={2.5} /> Support Agent
         </span>
       );
     }
     return (
-      <span className="badge" style={{ backgroundColor: '#f1f5f9', color: '#475569' }}>
-        <User size={12} /> Employee
+      <span className="badge" style={{ backgroundColor: 'var(--slate-100)', color: 'var(--slate-700)', border: '1px solid var(--slate-300)' }}>
+        <User size={11} strokeWidth={2.5} /> Employee
       </span>
     );
   };
@@ -218,12 +218,12 @@ export const UsersManagement = () => {
                   <td>{getRoleBadge(u.role)}</td>
                   <td>
                     {u.is_active ? (
-                      <span className="badge" style={{ backgroundColor: '#ecfdf5', color: '#047857' }}>
-                        <CheckCircle size={12} /> Active
+                      <span className="badge" style={{ backgroundColor: 'var(--success-light)', color: 'var(--success-text)', border: '1px solid var(--success-border)' }}>
+                        <CheckCircle size={11} strokeWidth={2.5} /> Active
                       </span>
                     ) : (
-                      <span className="badge" style={{ backgroundColor: '#fef2f2', color: '#b91c1c' }}>
-                        <XCircle size={12} /> Deactivated
+                      <span className="badge" style={{ backgroundColor: 'var(--danger-light)', color: 'var(--danger-text)', border: '1px solid var(--danger-border)' }}>
+                        <XCircle size={11} strokeWidth={2.5} /> Deactivated
                       </span>
                     )}
                   </td>

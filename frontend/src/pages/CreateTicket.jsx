@@ -108,7 +108,7 @@ export const CreateTicket = () => {
             </span>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div className="form-row-2">
             <div className="form-group">
               <label className="form-label">Category *</label>
               <select
@@ -133,12 +133,15 @@ export const CreateTicket = () => {
                   type="button"
                   onClick={() => setIsAdvisorOpen(true)}
                   style={{
-                    fontSize: '0.75rem',
+                    fontSize: '0.78rem',
                     color: 'var(--primary)',
                     fontWeight: 600,
                     display: 'flex',
                     alignItems: 'center',
                     gap: '4px',
+                    padding: '2px 6px',
+                    borderRadius: 'var(--radius-xs)',
+                    backgroundColor: 'var(--primary-light)',
                   }}
                 >
                   <Sparkles size={13} /> Smart Advisor

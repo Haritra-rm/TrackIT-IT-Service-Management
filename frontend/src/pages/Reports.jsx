@@ -177,11 +177,11 @@ export const Reports = () => {
       </div>
 
       {/* Visual Charts Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '24px', marginBottom: '28px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '28px' }}>
         {/* Doughnut: Status Distribution */}
         <div className="card">
           <h2 className="card-title" style={{ marginBottom: '16px' }}>Tickets by Lifecycle Status</h2>
-          <div style={{ maxWidth: '300px', margin: '0 auto', padding: '12px' }}>
+          <div style={{ maxWidth: '280px', width: '100%', margin: '0 auto', padding: '12px 0' }}>
             <Doughnut data={doughnutData} options={{ maintainAspectRatio: true, plugins: { legend: { position: 'bottom' } } }} />
           </div>
         </div>

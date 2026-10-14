@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Modal } from './Modal';
 import { PriorityBadge } from './PriorityBadge';
 import { ticketService } from '../services/ticketService';
-import { Sparkles, Check, HelpCircle } from 'lucide-react';
+import { Sparkles, Check, CheckCircle2, Clock, ShieldAlert, AlertTriangle } from 'lucide-react';
 
 export const PriorityRecommenderModal = ({ isOpen, onClose, onSelectPriority, defaultCategory = '' }) => {
   const [affectedUsers, setAffectedUsers] = useState(1);
@@ -43,7 +43,7 @@ export const PriorityRecommenderModal = ({ isOpen, onClose, onSelectPriority, de
       isOpen={isOpen}
       onClose={onClose}
       title="Smart Priority Advisor (Rule-Based Engine)"
-      maxWidth="540px"
+      maxWidth="560px"
       footer={
         <>
           <button className="btn btn-secondary" onClick={onClose}>
@@ -57,13 +57,26 @@ export const PriorityRecommenderModal = ({ isOpen, onClose, onSelectPriority, de
         </>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)' }}>
-          TrackIT's Smart Recommendation Engine evaluates blast radius, infrastructure criticality, and security impact to recommend the objective priority level according to organization SLA guidelines.
-        </p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+        <div style={{
+          backgroundColor: 'var(--primary-light)',
+          border: '1px solid var(--primary-border)',
+          borderRadius: 'var(--radius-sm)',
+          padding: '12px 16px',
+          fontSize: '0.85rem',
+          color: '#1e40af',
+          display: 'flex',
+          gap: '10px',
+          alignItems: 'flex-start',
+        }}>
+          <Sparkles size={18} color="#2563eb" style={{ flexShrink: 0, marginTop: '2px' }} />
+          <span>
+            TrackIT's Smart Recommendation Engine evaluates blast radius, infrastructure criticality, and security impact to recommend the objective priority level according to organization SLA guidelines.
+          </span>
+        </div>
 
-        <div className="form-group">
-          <label className="form-label">How many users are impacted?</label>
+        <div className="form-group" style={{ marginBottom: 0 }}>
+          <label className="form-label">How many users or systems are impacted?</label>
           <input
             type="number"
             min="1"
@@ -71,12 +84,12 @@ export const PriorityRecommenderModal = ({ isOpen, onClose, onSelectPriority, de
             value={affectedUsers}
             onChange={(e) => setAffectedUsers(e.target.value)}
           />
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-            1 = Individual, 2-19 = Department/Team, 20+ = Enterprise-wide
+          <span className="form-helper">
+            1 = Individual, 2-19 = Department/Team, 20+ = Enterprise-wide Outage
           </span>
         </div>
 
-        <div className="form-group">
+        <div className="form-group" style={{ marginBottom: 0 }}>
           <label className="form-label">Business Operational Impact</label>
           <select
             className="form-select"
@@ -84,64 +97,120 @@ export const PriorityRecommenderModal = ({ isOpen, onClose, onSelectPriority, de
             onChange={(e) => setBusinessImpact(e.target.value)}
           >
             <option value="LOW">Low (Work continues normally, minor inconvenience)</option>
-            <option value="MEDIUM">Medium (Productivity impaired, workaround exists)</option>
-            <option value="HIGH">High (Key business process or deliverables blocked)</option>
-            <option value="CRITICAL">Critical (Company-wide work halt / financial loss)</option>
+            <option value="MEDIUM">Medium (Productivity impaired, standard workaround exists)</option>
+            <option value="HIGH">High (Key business workflow or deliverables blocked)</option>
+            <option value="CRITICAL">Critical (Company-wide work halt / financial or legal risk)</option>
           </select>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.88rem', cursor: 'pointer' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <label
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              padding: '10px 14px',
+              borderRadius: 'var(--radius-sm)',
+              border: isSecurityIncident ? '1px solid #fca5a5' : '1px solid var(--border-color)',
+              backgroundColor: isSecurityIncident ? '#fef2f2' : '#ffffff',
+              cursor: 'pointer',
+              transition: 'all var(--transition-fast)',
+            }}
+          >
             <input
               type="checkbox"
               checked={isSecurityIncident}
               onChange={(e) => setIsSecurityIncident(e.target.checked)}
+              style={{ width: '16px', height: '16px' }}
             />
-            <span>This is an active Security Incident / Data Exposure alert</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem' }}>
+              <ShieldAlert size={16} color={isSecurityIncident ? '#dc2626' : '#64748b'} />
+              <span style={{ fontWeight: 500, color: isSecurityIncident ? '#991b1b' : 'var(--text-main)' }}>
+                Active Security Incident / Data Leak Risk
+              </span>
+            </div>
           </label>
 
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.88rem', cursor: 'pointer' }}>
+          <label
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              padding: '10px 14px',
+              borderRadius: 'var(--radius-sm)',
+              border: isSystemDown ? '1px solid #fed7aa' : '1px solid var(--border-color)',
+              backgroundColor: isSystemDown ? '#fff7ed' : '#ffffff',
+              cursor: 'pointer',
+              transition: 'all var(--transition-fast)',
+            }}
+          >
             <input
               type="checkbox"
               checked={isSystemDown}
               onChange={(e) => setIsSystemDown(e.target.checked)}
+              style={{ width: '16px', height: '16px' }}
             />
-            <span>Core production system or service is completely down</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem' }}>
+              <AlertTriangle size={16} color={isSystemDown ? '#ea580c' : '#64748b'} />
+              <span style={{ fontWeight: 500, color: isSystemDown ? '#9a3412' : 'var(--text-main)' }}>
+                Core production system or service is completely down
+              </span>
+            </div>
           </label>
         </div>
 
         <button
+          type="button"
           className="btn btn-secondary"
           onClick={handleCalculate}
           disabled={loading}
-          style={{ alignSelf: 'flex-start', marginTop: '6px' }}
+          style={{ alignSelf: 'flex-start' }}
         >
-          <Sparkles size={16} color="#3b82f6" /> {loading ? 'Evaluating...' : 'Compute Recommendation'}
+          <Sparkles size={16} color="#2563eb" /> {loading ? 'Evaluating SLA Rules...' : 'Compute Recommendation'}
         </button>
 
+        {/* Polished Recommendation Card */}
         {recommendation && (
           <div
             style={{
-              marginTop: '12px',
-              padding: '16px',
+              marginTop: '6px',
+              padding: '18px 20px',
               backgroundColor: '#f8fafc',
               border: '1px solid #cbd5e1',
-              borderRadius: 'var(--radius-sm)',
+              borderRadius: 'var(--radius-md)',
+              boxShadow: 'var(--shadow-xs)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>
-                RECOMMENDED PRIORITY:
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Recommended Priority Level
               </span>
               <PriorityBadge priority={recommendation.recommended_priority} />
             </div>
 
-            <div style={{ fontSize: '0.88rem', color: 'var(--text-main)', marginBottom: '8px' }}>
-              <strong>Reasoning:</strong> {recommendation.reasoning}
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+              <CheckCircle2 size={16} color="#10b981" style={{ flexShrink: 0, marginTop: '3px' }} />
+              <div style={{ fontSize: '0.88rem', color: 'var(--text-main)', lineHeight: 1.5 }}>
+                <strong>Decision Rationale:</strong> {recommendation.reasoning}
+              </div>
             </div>
 
-            <div style={{ fontSize: '0.8rem', color: '#475569' }}>
-              <strong>Target SLA Resolution:</strong> Within {recommendation.sla_hours} hours.
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 12px',
+              backgroundColor: '#eff6ff',
+              borderRadius: 'var(--radius-sm)',
+              fontSize: '0.82rem',
+              color: '#1d4ed8',
+              fontWeight: 600,
+            }}>
+              <Clock size={15} />
+              <span>Target SLA Resolution Window: Within {recommendation.sla_hours} hours</span>
             </div>
           </div>
         )}

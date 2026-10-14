@@ -18,8 +18,8 @@ export const PriorityBadge = ({ priority }) => {
 
   return (
     <span className={`badge ${config.className}`}>
-      <Icon size={12} strokeWidth={2.5} />
-      {config.label}
+      <Icon size={11} strokeWidth={2.5} />
+      <span>{config.label}</span>
     </span>
   );
 };

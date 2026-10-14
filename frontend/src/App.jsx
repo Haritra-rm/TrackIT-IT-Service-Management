@@ -20,13 +20,31 @@ import { Reports } from './pages/Reports';
 import { AuditLogs } from './pages/AuditLogs';
 import { Profile } from './pages/Profile';
 
-// App Layout with Sidebar and Navbar
+// App Layout with Responsive Sidebar Drawer and Top Navbar
 const AppLayout = () => {
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const location = React.useLocation ? React.useLocation() : { pathname: '' };
+
+  React.useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
   return (
     <div className="app-container">
-      <Sidebar />
+      {/* Mobile Drawer Backdrop */}
+      {mobileMenuOpen && (
+        <div
+          className="sidebar-overlay"
+          onClick={() => setMobileMenuOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+      <Sidebar
+        isOpen={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+      />
       <div className="main-content">
-        <Navbar />
+        <Navbar onToggleMobile={() => setMobileMenuOpen((prev) => !prev)} />
         <Outlet />
       </div>
     </div>

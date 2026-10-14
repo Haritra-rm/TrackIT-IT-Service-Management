@@ -131,7 +131,7 @@ export const AdminDashboard = () => {
       </div>
 
       {/* Distribution Cards Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '24px' }}>
         {/* Status Distribution */}
         <div className="card">
           <h2 className="card-title" style={{ marginBottom: '16px' }}>Tickets by Lifecycle Status</h2>

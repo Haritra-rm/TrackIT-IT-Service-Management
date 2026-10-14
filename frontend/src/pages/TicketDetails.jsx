@@ -288,22 +288,22 @@ export const TicketDetails = () => {
       {error && <ErrorMessage message={error} onDismiss={() => setError(null)} />}
 
       {/* Main Grid: Details on Left, Meta on Right */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(300px, 1fr)', gap: '24px' }}>
+      <div className="ticket-details-layout" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(300px, 1fr)', gap: '24px' }}>
         {/* Left Column: Details, Comments, Timeline */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           {/* Main Card */}
           <div className="card">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontFamily: 'JetBrains Mono', fontSize: '0.95rem', fontWeight: 700, color: 'var(--primary)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+              <span style={{ fontFamily: 'JetBrains Mono', fontSize: '1rem', fontWeight: 800, color: 'var(--primary)', backgroundColor: 'var(--primary-light)', padding: '4px 10px', borderRadius: 'var(--radius-xs)', border: '1px solid var(--primary-border)' }}>
                 TICKET #{ticket.id}
               </span>
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 <PriorityBadge priority={ticket.priority} />
                 <StatusBadge status={ticket.status} />
               </div>
             </div>
 
-            <h1 style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '16px' }}>
+            <h1 style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '16px', lineHeight: 1.3 }}>
               {ticket.title}
             </h1>
 
@@ -314,12 +314,13 @@ export const TicketDetails = () => {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  backgroundColor: '#f8fafc',
+                  backgroundColor: 'var(--slate-50)',
                   border: '1px solid var(--border-color)',
-                  borderRadius: 'var(--radius-sm)',
+                  borderRadius: 'var(--radius-md)',
                   padding: '16px 20px',
                   marginBottom: '20px',
                   overflowX: 'auto',
+                  WebkitOverflowScrolling: 'touch',
                 }}
               >
                 {steps.map((st, idx) => {
@@ -328,29 +329,33 @@ export const TicketDetails = () => {
 
                   return (
                     <React.Fragment key={st}>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', minWidth: '60px' }}>
                         <div
                           style={{
-                            width: '26px',
-                            height: '26px',
+                            width: '28px',
+                            height: '28px',
                             borderRadius: '50%',
-                            backgroundColor: isDone ? 'var(--primary)' : '#e2e8f0',
-                            color: isDone ? '#fff' : '#64748b',
+                            backgroundColor: isDone ? 'var(--primary)' : 'var(--slate-200)',
+                            color: isDone ? '#fff' : 'var(--slate-600)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             fontSize: '0.75rem',
                             fontWeight: 700,
+                            boxShadow: isCurrent ? '0 0 0 3px rgba(37, 99, 235, 0.25)' : 'none',
+                            transition: 'all var(--transition-fast)',
                           }}
                         >
                           {isDone ? '✓' : idx + 1}
                         </div>
                         <span
                           style={{
-                            fontSize: '0.7rem',
-                            fontWeight: isCurrent ? 700 : 500,
+                            fontSize: '0.68rem',
+                            fontWeight: isCurrent ? 700 : 600,
                             color: isCurrent ? 'var(--primary)' : 'var(--text-muted)',
                             textTransform: 'uppercase',
+                            letterSpacing: '0.04em',
+                            textAlign: 'center',
                           }}
                         >
                           {st.replace('_', ' ')}
@@ -360,10 +365,11 @@ export const TicketDetails = () => {
                         <div
                           style={{
                             flex: 1,
-                            height: '2px',
-                            backgroundColor: currentStepIndex > idx ? 'var(--primary)' : '#e2e8f0',
+                            height: '3px',
+                            backgroundColor: currentStepIndex > idx ? 'var(--primary)' : 'var(--slate-200)',
                             margin: '0 8px',
-                            minWidth: '20px',
+                            minWidth: '16px',
+                            borderRadius: '2px',
                           }}
                         />
                       )}

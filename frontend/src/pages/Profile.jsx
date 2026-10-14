@@ -104,11 +104,12 @@ export const Profile = () => {
                 style={{
                   padding: '6px 12px',
                   fontSize: '0.82rem',
-                  backgroundColor: user?.role === 'ADMIN' ? '#f3e8ff' : user?.role === 'SUPPORT_AGENT' ? '#dbeafe' : '#f1f5f9',
-                  color: user?.role === 'ADMIN' ? '#6b21a8' : user?.role === 'SUPPORT_AGENT' ? '#1e40af' : '#475569',
+                  backgroundColor: user?.role === 'ADMIN' ? 'var(--purple-light)' : user?.role === 'SUPPORT_AGENT' ? 'var(--primary-light)' : 'var(--slate-100)',
+                  color: user?.role === 'ADMIN' ? 'var(--purple-text)' : user?.role === 'SUPPORT_AGENT' ? '#1e40af' : 'var(--slate-700)',
+                  border: user?.role === 'ADMIN' ? '1px solid var(--purple-border)' : user?.role === 'SUPPORT_AGENT' ? '1px solid var(--primary-border)' : '1px solid var(--slate-300)',
                 }}
               >
-                <Shield size={14} /> {user?.role}
+                <Shield size={13} strokeWidth={2.5} /> {user?.role}
               </span>
             </div>
           </div>

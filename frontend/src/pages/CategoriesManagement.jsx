@@ -104,12 +104,12 @@ export const CategoriesManagement = () => {
                   </td>
                   <td>
                     {cat.is_active ? (
-                      <span className="badge" style={{ backgroundColor: '#ecfdf5', color: '#047857' }}>
-                        <CheckCircle size={12} /> Active
+                      <span className="badge" style={{ backgroundColor: 'var(--success-light)', color: 'var(--success-text)', border: '1px solid var(--success-border)' }}>
+                        <CheckCircle size={11} strokeWidth={2.5} /> Active
                       </span>
                     ) : (
-                      <span className="badge" style={{ backgroundColor: '#fef2f2', color: '#b91c1c' }}>
-                        <XCircle size={12} /> Inactive
+                      <span className="badge" style={{ backgroundColor: 'var(--slate-100)', color: 'var(--slate-600)', border: '1px solid var(--slate-300)' }}>
+                        <XCircle size={11} strokeWidth={2.5} /> Inactive
                       </span>
                     )}
                   </td>

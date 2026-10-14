@@ -13,10 +13,12 @@ import {
   LogOut,
   ShieldAlert,
   Headphones,
+  UserCheck,
+  X,
 } from 'lucide-react';
 
-export const Sidebar = () => {
-  const { user, role, isEmployee, isAgent, isAdmin, logout } = useAuth();
+export const Sidebar = ({ isOpen = false, onClose }) => {
+  const { user, isEmployee, isAgent, isAdmin, logout } = useAuth();
 
   const getRoleLabel = () => {
     if (isAdmin) return 'Administrator';
@@ -30,35 +32,41 @@ export const Sidebar = () => {
     return { backgroundColor: '#059669', color: '#fff' };
   };
 
+  const handleNavClick = () => {
+    if (onClose) onClose();
+  };
+
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isOpen ? 'mobile-open' : ''}`} aria-label="Sidebar Navigation">
       {/* Brand Header */}
       <div className="sidebar-brand">
-        <div className="brand-icon">T</div>
-        <div>
-          <div className="brand-title">TrackIT</div>
-          <div className="brand-subtitle">IT Service Ops</div>
+        <div className="brand-wrapper">
+          <div className="brand-icon">T</div>
+          <div>
+            <div className="brand-title">TrackIT</div>
+            <div className="brand-subtitle">IT Service Ops</div>
+          </div>
         </div>
+
+        {/* Mobile Close Button */}
+        <button
+          className="sidebar-close-btn"
+          onClick={onClose}
+          aria-label="Close navigation menu"
+        >
+          <X size={20} />
+        </button>
       </div>
 
       {/* Role Pill */}
-      <div style={{ padding: '12px 18px', borderBottom: '1px solid #1e293b' }}>
+      <div className="sidebar-role-pill">
         <span
-          style={{
-            ...getRoleBadgeStyle(),
-            padding: '3px 8px',
-            borderRadius: 'var(--radius-full)',
-            fontSize: '0.7rem',
-            fontWeight: 700,
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '4px',
-          }}
+          className="role-badge"
+          style={getRoleBadgeStyle()}
         >
           {isAdmin && <ShieldAlert size={12} />}
           {isAgent && <Headphones size={12} />}
+          {isEmployee && <UserCheck size={12} />}
           {getRoleLabel()}
         </span>
       </div>
@@ -69,27 +77,30 @@ export const Sidebar = () => {
         <NavLink
           to="/"
           end
+          onClick={handleNavClick}
           className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
         >
           <LayoutDashboard size={18} />
-          <span className="nav-text">Dashboard</span>
+          <span>Dashboard</span>
         </NavLink>
 
         <div className="nav-section-title">Ticket Management</div>
         <NavLink
           to="/tickets"
+          onClick={handleNavClick}
           className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
         >
           <Ticket size={18} />
-          <span className="nav-text">{isEmployee ? 'My Tickets' : 'All Tickets'}</span>
+          <span>{isEmployee ? 'My Tickets' : 'All Tickets'}</span>
         </NavLink>
 
         <NavLink
           to="/tickets/create"
+          onClick={handleNavClick}
           className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
         >
           <PlusCircle size={18} />
-          <span className="nav-text">Raise Ticket</span>
+          <span>Raise Ticket</span>
         </NavLink>
 
         {(isAgent || isAdmin) && (
@@ -97,10 +108,11 @@ export const Sidebar = () => {
             <div className="nav-section-title">Operations & Reports</div>
             <NavLink
               to="/reports"
+              onClick={handleNavClick}
               className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
             >
               <BarChart3 size={18} />
-              <span className="nav-text">Analytics & KPIs</span>
+              <span>Analytics & KPIs</span>
             </NavLink>
           </>
         )}
@@ -110,26 +122,29 @@ export const Sidebar = () => {
             <div className="nav-section-title">Administration</div>
             <NavLink
               to="/users"
+              onClick={handleNavClick}
               className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
             >
               <Users size={18} />
-              <span className="nav-text">User Management</span>
+              <span>User Management</span>
             </NavLink>
 
             <NavLink
               to="/categories"
+              onClick={handleNavClick}
               className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
             >
               <FolderKanban size={18} />
-              <span className="nav-text">Categories</span>
+              <span>Categories</span>
             </NavLink>
 
             <NavLink
               to="/audit-logs"
+              onClick={handleNavClick}
               className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
             >
               <FileText size={18} />
-              <span className="nav-text">System Audit Logs</span>
+              <span>System Audit Logs</span>
             </NavLink>
           </>
         )}
@@ -137,10 +152,11 @@ export const Sidebar = () => {
         <div className="nav-section-title" style={{ marginTop: 'auto' }}>Account</div>
         <NavLink
           to="/profile"
+          onClick={handleNavClick}
           className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
         >
           <User size={18} />
-          <span className="nav-text">My Profile</span>
+          <span>My Profile</span>
         </NavLink>
       </nav>
 
@@ -149,7 +165,7 @@ export const Sidebar = () => {
         <div className="user-avatar">
           {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
         </div>
-        <div className="user-details" style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <div
             style={{
               fontSize: '0.85rem',
@@ -157,6 +173,7 @@ export const Sidebar = () => {
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
+              color: '#ffffff',
             }}
           >
             {user?.name || 'User'}
@@ -164,7 +181,7 @@ export const Sidebar = () => {
           <div
             style={{
               fontSize: '0.72rem',
-              color: '#94a3b8',
+              color: 'var(--slate-400)',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -177,13 +194,17 @@ export const Sidebar = () => {
           onClick={logout}
           title="Logout"
           style={{
-            color: '#94a3b8',
-            padding: '6px',
-            borderRadius: '4px',
-            transition: 'color 0.15s ease',
+            color: 'var(--slate-400)',
+            padding: '8px',
+            borderRadius: 'var(--radius-xs)',
+            transition: 'color var(--transition-fast)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
           onMouseEnter={(e) => (e.currentTarget.style.color = '#ef4444')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = '#94a3b8')}
+          onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--slate-400)')}
+          aria-label="Log out of TrackIT"
         >
           <LogOut size={18} />
         </button>

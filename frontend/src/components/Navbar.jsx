@@ -1,68 +1,58 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import { PlusCircle, Bell, Shield, LifeBuoy } from 'lucide-react';
+import { PlusCircle, Menu } from 'lucide-react';
 
-export const Navbar = () => {
+export const Navbar = ({ onToggleMobile }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
 
   const getBreadcrumb = () => {
     const path = location.pathname;
     if (path === '/') return 'Dashboard';
     if (path.startsWith('/tickets/create')) return 'Tickets / Raise New Issue';
-    if (path.startsWith('/tickets/')) return 'Tickets / Ticket Details';
-    if (path.startsWith('/tickets')) return 'Tickets / Ticket Directory';
-    if (path.startsWith('/users')) return 'Administration / User Directory';
-    if (path.startsWith('/categories')) return 'Administration / Issue Categories';
+    if (path.startsWith('/tickets/')) return 'Tickets / Details';
+    if (path.startsWith('/tickets')) return 'Tickets / Directory';
+    if (path.startsWith('/users')) return 'Administration / Users';
+    if (path.startsWith('/categories')) return 'Administration / Categories';
     if (path.startsWith('/reports')) return 'Analytics / Performance & KPIs';
-    if (path.startsWith('/audit-logs')) return 'Administration / System Audit Trail';
-    if (path.startsWith('/profile')) return 'My Account / Profile';
-    return 'TrackIT Portal';
+    if (path.startsWith('/audit-logs')) return 'Administration / Audit Trail';
+    if (path.startsWith('/profile')) return 'Account / Profile';
+    return 'Portal';
   };
 
   return (
-    <header className="top-navbar">
-      <div className="navbar-breadcrumbs">
-        <span style={{ color: 'var(--text-light)' }}>TrackIT</span>
-        <span>/</span>
-        <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{getBreadcrumb()}</span>
+    <header className="top-navbar" aria-label="Main Navigation Header">
+      <div className="navbar-left">
+        {/* Mobile Hamburger Drawer Toggle Button */}
+        <button
+          className="navbar-hamburger"
+          onClick={onToggleMobile}
+          aria-label="Toggle navigation menu"
+        >
+          <Menu size={20} />
+        </button>
+
+        {/* Dynamic Responsive Breadcrumbs */}
+        <div className="navbar-breadcrumbs">
+          <span style={{ color: 'var(--text-light)', fontWeight: 500 }}>TrackIT</span>
+          <span style={{ color: 'var(--slate-300)' }}>/</span>
+          <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{getBreadcrumb()}</span>
+        </div>
       </div>
 
       <div className="navbar-actions">
-        {/* System Status Indicator */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            fontSize: '0.8rem',
-            color: '#059669',
-            backgroundColor: '#ecfdf5',
-            padding: '4px 10px',
-            borderRadius: 'var(--radius-full)',
-            fontWeight: 600,
-          }}
-        >
-          <span
-            style={{
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              backgroundColor: '#10b981',
-              display: 'inline-block',
-            }}
-          />
-          Live
+        {/* Live Operational Health Status */}
+        <div className="live-indicator" title="IT Systems & SLA Engine: Operational">
+          <span className="live-dot" />
+          <span>Live Ops</span>
         </div>
 
-        {/* Quick Raise Ticket CTA */}
+        {/* Fast Action CTA */}
         <button
           className="btn btn-sm btn-primary"
           onClick={() => navigate('/tickets/create')}
         >
-          <PlusCircle size={15} /> Raise Issue
+          <PlusCircle size={15} /> <span>Raise Issue</span>
         </button>
       </div>
     </header>
