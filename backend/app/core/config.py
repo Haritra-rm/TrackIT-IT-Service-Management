@@ -23,8 +23,8 @@ class Settings(BaseSettings):
 
     # SLA Rules (in hours)
     SLA_LOW_HOURS: int = 72
-    SLA_MEDIUM_HOURS: int = 48
-    SLA_HIGH_HOURS: int = 24
+    SLA_MEDIUM_HOURS: int = 24
+    SLA_HIGH_HOURS: int = 8
     SLA_CRITICAL_HOURS: int = 4
 
     # Server Bindings

@@ -22,12 +22,14 @@ class SLAService:
         due_at: Optional[datetime],
         resolved_at: Optional[datetime] = None,
         status: Optional[str] = None,
+        current_time: Optional[datetime] = None,
     ) -> Dict[str, Any]:
         """
         Evaluate real-time SLA metrics:
         - sla_status: 'ON_TRACK', 'AT_RISK', 'BREACHED', 'MET'
         - sla_remaining_hours: float
         - is_breached: bool
+        Supports controllable clock (current_time parameter) for deterministic testing.
         """
         if not due_at:
             return {
@@ -37,14 +39,27 @@ class SLAService:
             }
 
         # Normalize datetime awareness consistently
-        if due_at.tzinfo is None:
-            now_cmp = datetime.now()
-            due_cmp = due_at
-            resolved_cmp = resolved_at
+        is_tz_aware = due_at.tzinfo is not None
+
+        if current_time is not None:
+            now_cmp = current_time
         else:
-            now_cmp = datetime.now(timezone.utc)
-            due_cmp = due_at
-            resolved_cmp = resolved_at
+            now_cmp = datetime.now(timezone.utc) if is_tz_aware else datetime.now()
+
+        due_cmp = due_at
+        resolved_cmp = resolved_at
+        created_cmp = created_at
+
+        # Ensure tz-awareness consistency between created_cmp, due_cmp, and now_cmp
+        if is_tz_aware and now_cmp.tzinfo is None:
+            now_cmp = now_cmp.replace(tzinfo=timezone.utc)
+        elif not is_tz_aware and now_cmp.tzinfo is not None:
+            now_cmp = now_cmp.replace(tzinfo=None)
+
+        if created_cmp.tzinfo is not None and not is_tz_aware:
+            created_cmp = created_cmp.replace(tzinfo=None)
+        elif created_cmp.tzinfo is None and is_tz_aware:
+            created_cmp = created_cmp.replace(tzinfo=timezone.utc)
 
         # If ticket has already been resolved or closed
         if status in ["RESOLVED", "CLOSED"] and resolved_cmp:
@@ -72,13 +87,19 @@ class SLAService:
                 "is_breached": True,
             }
 
-        # If remaining time is less than or equal to 4 hours, mark as AT_RISK
-        if remaining_hours <= 4.0:
-            return {
-                "sla_status": "AT_RISK",
-                "sla_remaining_hours": remaining_hours,
-                "is_breached": False,
-            }
+        # Proportional AT_RISK calculation:
+        # A ticket is marked AT_RISK if >= 75% of the SLA duration has elapsed
+        # or less than 2 hours remaining
+        total_duration_seconds = (due_cmp - created_cmp).total_seconds()
+        if total_duration_seconds > 0:
+            elapsed_seconds = (now_cmp - created_cmp).total_seconds()
+            elapsed_ratio = elapsed_seconds / total_duration_seconds
+            if elapsed_ratio >= 0.75 or remaining_hours <= 1.0:
+                return {
+                    "sla_status": "AT_RISK",
+                    "sla_remaining_hours": remaining_hours,
+                    "is_breached": False,
+                }
 
         return {
             "sla_status": "ON_TRACK",

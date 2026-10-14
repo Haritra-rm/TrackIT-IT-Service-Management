@@ -42,12 +42,12 @@ class TicketService:
 
     # Allowed state transitions state machine
     VALID_TRANSITIONS = {
-        TicketStatus.OPEN: [TicketStatus.ASSIGNED, TicketStatus.IN_PROGRESS, TicketStatus.CLOSED],
-        TicketStatus.ASSIGNED: [TicketStatus.IN_PROGRESS, TicketStatus.OPEN, TicketStatus.RESOLVED],
-        TicketStatus.IN_PROGRESS: [TicketStatus.RESOLVED, TicketStatus.ASSIGNED, TicketStatus.OPEN],
+        TicketStatus.OPEN: [TicketStatus.ASSIGNED],
+        TicketStatus.ASSIGNED: [TicketStatus.IN_PROGRESS, TicketStatus.OPEN],
+        TicketStatus.IN_PROGRESS: [TicketStatus.RESOLVED, TicketStatus.ASSIGNED],
         TicketStatus.RESOLVED: [TicketStatus.CLOSED, TicketStatus.REOPENED],
         TicketStatus.CLOSED: [TicketStatus.REOPENED],
-        TicketStatus.REOPENED: [TicketStatus.IN_PROGRESS, TicketStatus.ASSIGNED, TicketStatus.RESOLVED],
+        TicketStatus.REOPENED: [TicketStatus.IN_PROGRESS],
     }
 
     def _enrich_ticket_response(self, ticket: Ticket) -> TicketResponse:
@@ -280,10 +280,6 @@ class TicketService:
         return self._enrich_ticket_response(self.ticket_repo.get_by_id_with_relations(updated.id))
 
     def update_status(self, ticket_id: int, payload: TicketStatusUpdate, current_user: User) -> TicketResponse:
-        # RBAC: Only Support Agents and Admins can advance standard lifecycle statuses
-        if current_user.role not in [UserRole.SUPPORT_AGENT, UserRole.ADMIN]:
-            raise ForbiddenException("Employees cannot manually change ticket status. Use Reopen endpoint instead.", code="FORBIDDEN")
-
         ticket = self.ticket_repo.get_by_id_with_relations(ticket_id)
         if not ticket:
             raise NotFoundException(f"Ticket with ID {ticket_id} was not found", code="TICKET_NOT_FOUND")
@@ -291,6 +287,17 @@ class TicketService:
         target_status = payload.status.upper()
         if target_status not in TicketStatus.ALL_STATUSES:
             raise ValidationException(f"Invalid status '{payload.status}'. Allowed: {TicketStatus.ALL_STATUSES}")
+
+        # RBAC: Support Agents and Admins can advance lifecycle statuses.
+        # Employees can confirm resolution and close their own tickets when in RESOLVED status.
+        is_employee_closing_own_resolved = (
+            current_user.role == UserRole.EMPLOYEE
+            and ticket.created_by == current_user.id
+            and ticket.status == TicketStatus.RESOLVED
+            and target_status == TicketStatus.CLOSED
+        )
+        if current_user.role not in [UserRole.SUPPORT_AGENT, UserRole.ADMIN] and not is_employee_closing_own_resolved:
+            raise ForbiddenException("Employees cannot manually change ticket status except closing resolved tickets. Use Reopen endpoint instead.", code="FORBIDDEN")
 
         # Validate transition against state machine
         allowed_next = self.VALID_TRANSITIONS.get(ticket.status, [])

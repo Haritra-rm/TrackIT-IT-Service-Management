@@ -140,12 +140,11 @@ All 6 relational tables (`users`, `categories`, `tickets`, `comments`, `ticket_s
 stateDiagram-v2
     [*] --> OPEN : Issue Submitted
     OPEN --> ASSIGNED : Support Agent Assigned
-    OPEN --> IN_PROGRESS : Direct Work Start
-    ASSIGNED --> IN_PROGRESS : Work In Progress
+    ASSIGNED --> IN_PROGRESS : Investigation Started
     IN_PROGRESS --> RESOLVED : Remedy Applied (Requires Notes)
-    RESOLVED --> CLOSED : Administrative Verification
+    RESOLVED --> CLOSED : Employee / Admin Closure
     RESOLVED --> REOPENED : Employee Reports Recurrence
-    CLOSED --> REOPENED : Explicit Authorization
+    CLOSED --> REOPENED : Reopened If Issue Persists
     REOPENED --> IN_PROGRESS : Re-investigation
 ```
 
@@ -155,14 +154,14 @@ stateDiagram-v2
 
 ### SLA Durations (Configurable via Environment):
 * **CRITICAL:** **4 Hours** SLA resolution target.
-* **HIGH:** **24 Hours** SLA resolution target.
-* **MEDIUM:** **48 Hours** SLA resolution target.
+* **HIGH:** **8 Hours** SLA resolution target.
+* **MEDIUM:** **24 Hours** SLA resolution target.
 * **LOW:** **72 Hours** SLA resolution target.
 
 ### Real-Time SLA Status Rules:
-* `ON_TRACK`: Remaining time $> 4.0\text{ hours}$.
-* `AT_RISK`: Remaining time $\le 4.0\text{ hours}$ (visual warning).
-* `BREACHED`: Current time has passed `due_at`.
+* `ON_TRACK`: Elapsed time $< 75\%$ of SLA duration.
+* `AT_RISK`: Elapsed time $\ge 75\%$ of SLA duration (or $\le 1.0\text{h}$ remaining).
+* `BREACHED`: Current time has passed `due_at` (or resolved after deadline).
 * `MET`: Ticket was marked `RESOLVED` on or before `due_at`.
 
 ---
@@ -227,14 +226,20 @@ docker compose down -v
 
 ## 11. Automated Testing Suite
 
-The testing suite contains **31 comprehensive test cases** validating authentication, RBAC boundaries, state machine rules, SLA calculations, and dashboard aggregations.
+The testing suite contains **48 comprehensive test cases** organized across `unit/`, `integration/`, and `api/` suites, validating authentication edge cases, RBAC boundaries, FSM state machine transitions, SLA evaluations (including controllable clock tests), and dashboard aggregations.
 
 ```bash
-# Run test suite
+# Run complete test suite across all subdirectories
 pytest backend/tests -v
 
-# Run with test execution durations
-pytest backend/tests -v --durations=10
+# Run unit tests only (SLA & Priority engine)
+pytest backend/tests/unit -v
+
+# Run integration tests (Multi-table SQL & Dashboard calculations)
+pytest backend/tests/integration -v
+
+# Run API & RBAC tests
+pytest backend/tests/api -v
 
 # Generate code coverage report
 pytest backend/tests --cov=app --cov-report=term-missing

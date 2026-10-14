@@ -81,3 +81,46 @@ def test_get_current_user_profile(client, employee_user):
     body = response.json()
     assert body["data"]["id"] == employee_user.id
     assert body["data"]["email"] == employee_user.email
+
+
+def test_user_login_nonexistent_email(client):
+    payload = {
+        "email": "ghost.user@trackit.internal",
+        "password": "Password123!",
+    }
+    response = client.post("/api/v1/auth/login", json=payload)
+    assert response.status_code == 401
+    assert response.json()["error"]["code"] == "INVALID_CREDENTIALS"
+
+
+def test_missing_token_rejected(client):
+    response = client.get("/api/v1/auth/me")
+    assert response.status_code == 401
+    assert response.json()["error"]["code"] == "MISSING_TOKEN"
+
+
+def test_malformed_token_rejected(client):
+    response = client.get("/api/v1/auth/me", headers={"Authorization": "Bearer malformed.invalid.token"})
+    assert response.status_code == 401
+    assert response.json()["error"]["code"] == "INVALID_TOKEN"
+
+
+def test_expired_token_rejected(client, employee_user):
+    from datetime import timedelta
+    expired_token = create_access_token(
+        {"sub": str(employee_user.id), "email": employee_user.email, "role": employee_user.role},
+        expires_delta=timedelta(minutes=-30),
+    )
+    response = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {expired_token}"})
+    assert response.status_code == 401
+    assert response.json()["error"]["code"] == "TOKEN_EXPIRED"
+
+
+def test_inactive_user_rejected(client, employee_user, db_session):
+    employee_user.is_active = False
+    db_session.commit()
+
+    headers = get_token_header(employee_user)
+    response = client.get("/api/v1/auth/me", headers=headers)
+    assert response.status_code == 403
+    assert response.json()["error"]["code"] == "USER_DISABLED"
