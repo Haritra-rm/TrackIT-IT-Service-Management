@@ -1,0 +1,478 @@
+{
+  "info": {
+    "_postman_id": "7f8b91a2-c3d4-4e5f-a6b7-8c9d0e1f2a3b",
+    "name": "TrackIT — Smart IT Service & Issue Management Platform API",
+    "description": "Production-grade Postman collection for TrackIT API v1. Includes automated JWT bearer token extraction on login, comprehensive request bodies, and role-based endpoints.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01. Authentication",
+      "item": [
+        {
+          "name": "Register Employee",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane.doe@trackit.internal\",\n  \"password\": \"Password@123\",\n  \"role\": \"EMPLOYEE\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login (Admin / Agent / Employee)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data.access_token) {",
+                  "    pm.collectionVariables.set('token', jsonData.data.access_token);",
+                  "    console.log('JWT Bearer Token captured successfully.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@trackit.internal\",\n  \"password\": \"Admin@123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Get Current User Profile (/me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02. Tickets",
+      "item": [
+        {
+          "name": "Create Ticket",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"VPN connection handshake failure after OS update\",\n  \"description\": \"Wireguard VPN client fails to negotiate TLS handshake on mac Sonoma.\",\n  \"category_id\": 3,\n  \"priority\": \"HIGH\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tickets",
+              "host": ["{{base_url}}"],
+              "path": ["tickets"]
+            }
+          }
+        },
+        {
+          "name": "List Tickets (Search, Filter & Pagination)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tickets?status=OPEN&priority=HIGH&page=1&page_size=15&sort_by=created_at&sort_order=desc",
+              "host": ["{{base_url}}"],
+              "path": ["tickets"],
+              "query": [
+                { "key": "status", "value": "OPEN" },
+                { "key": "priority", "value": "HIGH" },
+                { "key": "page", "value": "1" },
+                { "key": "page_size", "value": "15" },
+                { "key": "sort_by", "value": "created_at" },
+                { "key": "sort_order", "value": "desc" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Smart Priority Recommendation",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category_name\": \"Network\",\n  \"affected_users\": 25,\n  \"business_impact\": \"HIGH\",\n  \"is_security_incident\": false,\n  \"is_system_down\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tickets/recommend-priority",
+              "host": ["{{base_url}}"],
+              "path": ["tickets", "recommend-priority"]
+            }
+          }
+        },
+        {
+          "name": "Get Ticket by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tickets/1",
+              "host": ["{{base_url}}"],
+              "path": ["tickets", "1"]
+            }
+          }
+        },
+        {
+          "name": "Assign Ticket to Agent",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assigned_to\": 2\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tickets/1/assign",
+              "host": ["{{base_url}}"],
+              "path": ["tickets", "1", "assign"]
+            }
+          }
+        },
+        {
+          "name": "Update Ticket Status",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"IN_PROGRESS\",\n  \"notes\": \"Investigating gateway logs\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tickets/1/status",
+              "host": ["{{base_url}}"],
+              "path": ["tickets", "1", "status"]
+            }
+          }
+        },
+        {
+          "name": "Resolve Ticket",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resolution_notes\": \"Regenerated SSL client certificate and updated DNS resolving route.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tickets/1/resolve",
+              "host": ["{{base_url}}"],
+              "path": ["tickets", "1", "resolve"]
+            }
+          }
+        },
+        {
+          "name": "Reopen Ticket",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Still experiencing packet drops when accessing staging DB cluster.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tickets/1/reopen",
+              "host": ["{{base_url}}"],
+              "path": ["tickets", "1", "reopen"]
+            }
+          }
+        },
+        {
+          "name": "Get Ticket Status History",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tickets/1/history",
+              "host": ["{{base_url}}"],
+              "path": ["tickets", "1", "history"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03. Comments",
+      "item": [
+        {
+          "name": "Get Ticket Comments",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tickets/1/comments",
+              "host": ["{{base_url}}"],
+              "path": ["tickets", "1", "comments"]
+            }
+          }
+        },
+        {
+          "name": "Add Ticket Comment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comment\": \"Checked the wireguard routing table on the client; default gateway is correctly targeted.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tickets/1/comments",
+              "host": ["{{base_url}}"],
+              "path": ["tickets", "1", "comments"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04. Users",
+      "item": [
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users?page=1&page_size=20",
+              "host": ["{{base_url}}"],
+              "path": ["users"]
+            }
+          }
+        },
+        {
+          "name": "Get Support Agents List",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/agents",
+              "host": ["{{base_url}}"],
+              "path": ["users", "agents"]
+            }
+          }
+        },
+        {
+          "name": "Update User Status (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/4/status",
+              "host": ["{{base_url}}"],
+              "path": ["users", "4", "status"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05. Categories",
+      "item": [
+        {
+          "name": "List Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/categories",
+              "host": ["{{base_url}}"],
+              "path": ["categories"]
+            }
+          }
+        },
+        {
+          "name": "Create Category (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Cloud Infrastructure\",\n  \"description\": \"AWS, GCP, Azure cloud services and resources\",\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/categories",
+              "host": ["{{base_url}}"],
+              "path": ["categories"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "06. Dashboard & Analytics",
+      "item": [
+        {
+          "name": "Get Operational Summary KPIs",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/summary",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "summary"]
+            }
+          }
+        },
+        {
+          "name": "Get Tickets by Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/tickets-by-status",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "tickets-by-status"]
+            }
+          }
+        },
+        {
+          "name": "Get Tickets by Priority",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/tickets-by-priority",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "tickets-by-priority"]
+            }
+          }
+        },
+        {
+          "name": "Get Tickets by Category",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/tickets-by-category",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "tickets-by-category"]
+            }
+          }
+        },
+        {
+          "name": "Get Support Agent Performance",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/agent-performance",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "agent-performance"]
+            }
+          }
+        },
+        {
+          "name": "Get Audit Logs (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/audit-logs?limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["audit-logs"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

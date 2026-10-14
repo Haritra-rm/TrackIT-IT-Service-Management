@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: trackit-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: trackit_db
+      POSTGRES_USER: trackit_user
+      POSTGRES_PASSWORD: trackit_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trackit_user -d trackit_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - trackit-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: trackit-backend
+    restart: always
+    environment:
+      ENVIRONMENT: production
+      DATABASE_URL: postgresql://trackit_user:trackit_password@postgres:5432/trackit_db
+      JWT_SECRET_KEY: trackit_super_secret_production_key_replace_before_deploying_0987654321
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 480
+      CORS_ORIGINS: http://localhost:3000,http://localhost:5173,http://localhost:80
+      SLA_LOW_HOURS: 72
+      SLA_MEDIUM_HOURS: 48
+      SLA_HIGH_HOURS: 24
+      SLA_CRITICAL_HOURS: 4
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -c "python seed.py &&
+             python -m uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - trackit-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: trackit-frontend
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - trackit-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  trackit-network:
+    driver: bridge

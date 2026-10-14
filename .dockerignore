@@ -1,0 +1,15 @@
+node_modules/
+frontend/node_modules/
+frontend/dist/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+*.pyc
+__pycache__/
+.git/
+.gitignore
+*.db
+*.sqlite3
+.env
+logs/
