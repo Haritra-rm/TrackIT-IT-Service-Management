@@ -101,13 +101,25 @@ class TicketService:
         now = datetime.now()
         due_at = SLAService.calculate_due_date(now, priority)
 
+        # Support Agents & Admins can create tickets on behalf of employees
+        ticket_creator_id = creator.id
+        if payload.on_behalf_of_id:
+            if creator.role not in [UserRole.SUPPORT_AGENT, UserRole.ADMIN]:
+                raise ForbiddenException("Employees are only permitted to create tickets for themselves", code="FORBIDDEN")
+            target_user = self.user_repo.get_by_id(payload.on_behalf_of_id)
+            if not target_user:
+                raise NotFoundException(f"User with ID {payload.on_behalf_of_id} was not found", code="USER_NOT_FOUND")
+            if not target_user.is_active:
+                raise ValidationException("Cannot create tickets on behalf of an inactive user", code="USER_INACTIVE")
+            ticket_creator_id = target_user.id
+
         ticket = Ticket(
             title=payload.title.strip(),
             description=payload.description.strip(),
             category_id=category.id,
             priority=priority,
             status=TicketStatus.OPEN,
-            created_by=creator.id,
+            created_by=ticket_creator_id,
             created_at=now,
             due_at=due_at,
         )
@@ -127,7 +139,11 @@ class TicketService:
             action="TICKET_CREATED",
             entity_type="TICKET",
             entity_id=created_ticket.id,
-            metadata_json=json.dumps({"priority": priority, "category_id": category.id}),
+            metadata_json=json.dumps({
+                "priority": priority,
+                "category_id": category.id,
+                "on_behalf_of": ticket_creator_id if ticket_creator_id != creator.id else None,
+            }),
         )
 
         logger.info(f"Ticket #{created_ticket.id} created by user {creator.id} with priority {priority}")

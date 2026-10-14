@@ -1,21 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 import { ticketService } from '../services/ticketService';
 import { categoryService } from '../services/categoryService';
+import { userService } from '../services/userService';
 import { PriorityBadge } from '../components/PriorityBadge';
 import { PriorityRecommenderModal } from '../components/PriorityRecommenderModal';
 import { ErrorMessage } from '../components/ErrorMessage';
-import { Sparkles, ArrowLeft, Send } from 'lucide-react';
+import { Sparkles, ArrowLeft, Send, User } from 'lucide-react';
 
 export const CreateTicket = () => {
   const navigate = useNavigate();
+  const { user, isSupportOrAdmin } = useAuth();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [priority, setPriority] = useState('MEDIUM');
+  const [onBehalfOfId, setOnBehalfOfId] = useState('');
 
   const [categories, setCategories] = useState([]);
+  const [usersList, setUsersList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -36,7 +41,15 @@ export const CreateTicket = () => {
       .finally(() => {
         setCategoriesLoading(false);
       });
-  }, []);
+
+    if (isSupportOrAdmin) {
+      userService.listUsers({ page_size: 100 })
+        .then((res) => {
+          setUsersList(res.items || []);
+        })
+        .catch((err) => console.error('Failed to load user list for intake:', err));
+    }
+  }, [isSupportOrAdmin]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -49,12 +62,17 @@ export const CreateTicket = () => {
 
     setLoading(true);
     try {
-      const created = await ticketService.createTicket({
+      const payload = {
         title,
         description,
         category_id: Number(categoryId),
         priority,
-      });
+      };
+      if (isSupportOrAdmin && onBehalfOfId) {
+        payload.on_behalf_of_id = Number(onBehalfOfId);
+      }
+
+      const created = await ticketService.createTicket(payload);
       navigate(`/tickets/${created.id}`);
     } catch (err) {
       setError(err.message || 'Failed to create ticket');
@@ -91,6 +109,32 @@ export const CreateTicket = () => {
         {error && <ErrorMessage message={error} onDismiss={() => setError(null)} />}
 
         <form onSubmit={handleSubmit}>
+          {isSupportOrAdmin && (
+            <div className="form-group" style={{ backgroundColor: 'var(--slate-50)', padding: '14px 16px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                <User size={16} color="var(--primary)" />
+                <label className="form-label" style={{ marginBottom: 0, fontWeight: 700, color: 'var(--primary)' }}>
+                  Log on Behalf of Employee (Helpdesk / Walk-up Intake)
+                </label>
+              </div>
+              <select
+                className="form-select"
+                value={onBehalfOfId}
+                onChange={(e) => setOnBehalfOfId(e.target.value)}
+              >
+                <option value="">Myself ({user?.name || 'Current User'} - {user?.role})</option>
+                {usersList.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name} ({u.email}) — {u.role}
+                  </option>
+                ))}
+              </select>
+              <span className="form-helper">
+                Select an employee if you are logging a walk-up, phone call, or executive request on their behalf.
+              </span>
+            </div>
+          )}
+
           <div className="form-group">
             <label className="form-label">Issue Summary / Title *</label>
             <input

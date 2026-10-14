@@ -13,6 +13,7 @@ class TicketBase(BaseModel):
 class TicketCreate(TicketBase):
     affected_users: Optional[int] = Field(default=1, ge=1)
     business_impact: Optional[str] = Field(default="LOW")
+    on_behalf_of_id: Optional[int] = Field(default=None, description="Optional: Support Agent / Admin raising ticket on behalf of an employee")
 
 
 class TicketUpdate(BaseModel):

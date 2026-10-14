@@ -163,3 +163,35 @@ def test_reopen_ticket_flow(client, employee_user, agent_user, sample_category):
     )
     assert reopen_res.status_code == 200
     assert reopen_res.json()["data"]["status"] == "REOPENED"
+
+
+def test_support_agent_can_create_ticket_on_behalf_of_employee(client, employee_user, agent_user, sample_category):
+    agent_headers = get_token_header(agent_user)
+    payload = {
+        "title": "Hardware keyboard replacement for Alice",
+        "description": "Alice reported spacebar is sticking on her ThinkPad during morning standup.",
+        "category_id": sample_category.id,
+        "priority": "LOW",
+        "on_behalf_of_id": employee_user.id,
+    }
+    response = client.post("/api/v1/tickets", headers=agent_headers, json=payload)
+    assert response.status_code == 201
+    data = response.json()["data"]
+    # Ticket creator must be set to the target employee
+    assert data["created_by"] == employee_user.id
+    assert data["status"] == "OPEN"
+
+
+def test_employee_cannot_create_ticket_on_behalf_of_others(client, employee_user, agent_user, sample_category):
+    emp_headers = get_token_header(employee_user)
+    payload = {
+        "title": "Unauthorized attempt to raise on behalf of another user",
+        "description": "Employee trying to spoof requester ID should be forbidden.",
+        "category_id": sample_category.id,
+        "priority": "LOW",
+        "on_behalf_of_id": agent_user.id,
+    }
+    response = client.post("/api/v1/tickets", headers=emp_headers, json=payload)
+    assert response.status_code == 403
+    assert response.json()["error"]["code"] == "FORBIDDEN"
+
