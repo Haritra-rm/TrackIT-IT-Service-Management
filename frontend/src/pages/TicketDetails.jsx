@@ -186,6 +186,24 @@ export const TicketDetails = () => {
     }
   };
 
+  const handleClose = async () => {
+    setActionLoading(true);
+    try {
+      const updated = await ticketService.closeTicket(ticket.id);
+      setTicket(updated);
+      const [cData, hData] = await Promise.all([
+        ticketService.getComments(id),
+        ticketService.getHistory(id),
+      ]);
+      setComments(cData);
+      setHistory(hData);
+    } catch (err) {
+      setError(err.message || 'Failed to close ticket');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleDelete = async () => {
     setActionLoading(true);
     try {
@@ -214,6 +232,7 @@ export const TicketDetails = () => {
     );
   }
 
+  const isCreator = Boolean(user && ticket && user.id === ticket.created_by);
   const steps = ['OPEN', 'ASSIGNED', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'];
   const currentStepIndex = steps.indexOf(ticket.status);
 
@@ -226,18 +245,20 @@ export const TicketDetails = () => {
         </button>
 
         {/* Action Controls based on RBAC */}
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
           {isSupportOrAdmin && (
             <>
-              <button
-                className="btn btn-sm btn-secondary"
-                onClick={() => {
-                  setSelectedAgent(ticket.assigned_to || '');
-                  setIsAssignOpen(true);
-                }}
-              >
-                <UserPlus size={15} /> {ticket.assigned_to ? 'Reassign Agent' : 'Assign Ticket'}
-              </button>
+              {ticket.status !== 'CLOSED' && (
+                <button
+                  className="btn btn-sm btn-secondary"
+                  onClick={() => {
+                    setSelectedAgent(ticket.assigned_to || '');
+                    setIsAssignOpen(true);
+                  }}
+                >
+                  <UserPlus size={15} /> {ticket.assigned_to ? 'Reassign Agent' : 'Assign Ticket'}
+                </button>
+              )}
 
               {ticket.status !== 'RESOLVED' && ticket.status !== 'CLOSED' && (
                 <>
@@ -262,12 +283,25 @@ export const TicketDetails = () => {
             </>
           )}
 
-          {/* Reopen Action: Creator Employee or Admin can reopen if RESOLVED or CLOSED */}
+          {/* Close Action: Original Ticket Creator verifies and closes RESOLVED ticket */}
+          {ticket.status === 'RESOLVED' && isCreator && (
+            <button
+              className="btn btn-sm btn-primary"
+              onClick={handleClose}
+              disabled={actionLoading}
+              title="Verify resolution and close ticket"
+            >
+              <CheckCircle2 size={15} /> Close Ticket
+            </button>
+          )}
+
+          {/* Reopen Action: Creator or Admin can reopen if RESOLVED or CLOSED */}
           {(ticket.status === 'RESOLVED' || ticket.status === 'CLOSED') && (
             <button
               className="btn btn-sm btn-secondary"
               onClick={() => setIsReopenOpen(true)}
               style={{ borderColor: '#f43f5e', color: '#e11d48' }}
+              title="Reopen ticket if problem persists"
             >
               <RotateCcw size={15} /> Reopen Ticket
             </button>
@@ -660,7 +694,6 @@ export const TicketDetails = () => {
           >
             <option value="ASSIGNED">ASSIGNED (Agent accepted)</option>
             <option value="IN_PROGRESS">IN_PROGRESS (Under investigation)</option>
-            {isAdmin && <option value="CLOSED">CLOSED (Final administrative closure)</option>}
           </select>
         </div>
       </Modal>

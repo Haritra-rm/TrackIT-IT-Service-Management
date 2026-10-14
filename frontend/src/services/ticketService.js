@@ -33,6 +33,10 @@ export const ticketService = {
     return api.post(`/tickets/${id}/resolve`, { resolution_notes: resolutionNotes });
   },
 
+  closeTicket: (id) => {
+    return api.post(`/tickets/${id}/close`);
+  },
+
   reopenTicket: (id, reason) => {
     return api.post(`/tickets/${id}/reopen`, { reason });
   },

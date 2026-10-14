@@ -214,6 +214,21 @@ def resolve_ticket(
 
 
 @router.post(
+    "/{id}/close",
+    response_model=ApiResponse[TicketResponse],
+    summary="Close a resolved ticket after verification by original creator",
+)
+def close_ticket(
+    id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    service = TicketService(db)
+    ticket = service.close_ticket(id, current_user)
+    return ApiResponse(success=True, data=ticket, message="Ticket closed successfully")
+
+
+@router.post(
     "/{id}/reopen",
     response_model=ApiResponse[TicketResponse],
     summary="Reopen a resolved or closed ticket if problem persists",

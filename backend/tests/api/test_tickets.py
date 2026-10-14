@@ -91,15 +91,14 @@ def test_ticket_lifecycle_workflow(client, employee_user, agent_user, admin_user
     assert resolve_res.json()["data"]["status"] == "RESOLVED"
     assert resolve_res.json()["data"]["resolution_notes"] is not None
 
-    # 6. Admin closes ticket
-    admin_headers = get_token_header(admin_user)
+    # 6. Creator employee verifies resolution and closes ticket
     close_res = client.post(
-        f"/api/v1/tickets/{ticket_id}/status",
-        headers=admin_headers,
-        json={"status": "CLOSED"},
+        f"/api/v1/tickets/{ticket_id}/close",
+        headers=emp_headers,
     )
     assert close_res.status_code == 200
     assert close_res.json()["data"]["status"] == "CLOSED"
+    assert close_res.json()["data"]["closed_at"] is not None
 
     # 7. Verify status history
     history_res = client.get(f"/api/v1/tickets/{ticket_id}/history", headers=emp_headers)
@@ -194,4 +193,144 @@ def test_employee_cannot_create_ticket_on_behalf_of_others(client, employee_user
     response = client.post("/api/v1/tickets", headers=emp_headers, json=payload)
     assert response.status_code == 403
     assert response.json()["error"]["code"] == "FORBIDDEN"
+
+
+def test_creator_can_close_resolved_ticket(client, employee_user, agent_user, sample_category):
+    emp_headers = get_token_header(employee_user)
+    agent_headers = get_token_header(agent_user)
+
+    # 1. Employee creates ticket
+    create_res = client.post(
+        "/api/v1/tickets",
+        headers=emp_headers,
+        json={
+            "title": "External monitor flickers intermittently",
+            "description": "Dell 27-inch HDMI monitor flickers every couple of minutes.",
+            "category_id": sample_category.id,
+            "priority": "MEDIUM",
+        },
+    )
+    assert create_res.status_code == 201
+    ticket_id = create_res.json()["data"]["id"]
+
+    # 2. Agent assigns and resolves the ticket
+    client.post(
+        f"/api/v1/tickets/{ticket_id}/assign",
+        headers=agent_headers,
+        json={"assigned_to": agent_user.id},
+    )
+    client.post(
+        f"/api/v1/tickets/{ticket_id}/status",
+        headers=agent_headers,
+        json={"status": "IN_PROGRESS"},
+    )
+    resolve_res = client.post(
+        f"/api/v1/tickets/{ticket_id}/resolve",
+        headers=agent_headers,
+        json={"resolution_notes": "Replaced faulty HDMI cable with a certified high-speed cable."},
+    )
+    assert resolve_res.status_code == 200
+    assert resolve_res.json()["data"]["status"] == "RESOLVED"
+
+    # 3. Creator closes ticket after verification
+    close_res = client.post(f"/api/v1/tickets/{ticket_id}/close", headers=emp_headers)
+    assert close_res.status_code == 200
+    data = close_res.json()["data"]
+    assert data["status"] == "CLOSED"
+    assert data["closed_at"] is not None
+
+
+def test_non_creator_cannot_close_ticket(client, employee_user, agent_user, admin_user, sample_category):
+    emp_headers = get_token_header(employee_user)
+    agent_headers = get_token_header(agent_user)
+    admin_headers = get_token_header(admin_user)
+
+    # 1. Employee creates ticket
+    create_res = client.post(
+        "/api/v1/tickets",
+        headers=emp_headers,
+        json={
+            "title": "Email signature template formatting error",
+            "description": "Company logo is oversized in outbound emails via Outlook web app.",
+            "category_id": sample_category.id,
+            "priority": "LOW",
+        },
+    )
+    assert create_res.status_code == 201
+    ticket_id = create_res.json()["data"]["id"]
+
+    # 2. Agent resolves ticket
+    client.post(
+        f"/api/v1/tickets/{ticket_id}/assign",
+        headers=agent_headers,
+        json={"assigned_to": agent_user.id},
+    )
+    client.post(
+        f"/api/v1/tickets/{ticket_id}/status",
+        headers=agent_headers,
+        json={"status": "IN_PROGRESS"},
+    )
+    client.post(
+        f"/api/v1/tickets/{ticket_id}/resolve",
+        headers=agent_headers,
+        json={"resolution_notes": "Updated organization HTML signature template dimensions."},
+    )
+
+    # 3. Agent who resolved it attempts to close -> must be 403 FORBIDDEN
+    agent_close = client.post(f"/api/v1/tickets/{ticket_id}/close", headers=agent_headers)
+    assert agent_close.status_code == 403
+    assert agent_close.json()["error"]["code"] == "FORBIDDEN"
+
+    # 4. Admin who did not create the ticket attempts to close -> must be 403 FORBIDDEN
+    admin_close = client.post(f"/api/v1/tickets/{ticket_id}/close", headers=admin_headers)
+    assert admin_close.status_code == 403
+    assert admin_close.json()["error"]["code"] == "FORBIDDEN"
+
+    # 5. Direct status update to CLOSED by non-creator must also be rejected
+    status_close = client.post(
+        f"/api/v1/tickets/{ticket_id}/status",
+        headers=agent_headers,
+        json={"status": "CLOSED"},
+    )
+    assert status_close.status_code == 403
+    assert status_close.json()["error"]["code"] == "FORBIDDEN"
+
+
+def test_unresolved_ticket_cannot_be_closed(client, employee_user, agent_user, sample_category):
+    emp_headers = get_token_header(employee_user)
+    agent_headers = get_token_header(agent_user)
+
+    # 1. Employee creates ticket (Status: OPEN)
+    create_res = client.post(
+        "/api/v1/tickets",
+        headers=emp_headers,
+        json={
+            "title": "Cannot access internal wiki repository",
+            "description": "Permissions error 403 when loading Confluence team space.",
+            "category_id": sample_category.id,
+            "priority": "HIGH",
+        },
+    )
+    ticket_id = create_res.json()["data"]["id"]
+
+    # 2. Attempt to close OPEN ticket by creator -> 400 INVALID_STATUS_TRANSITION
+    open_close = client.post(f"/api/v1/tickets/{ticket_id}/close", headers=emp_headers)
+    assert open_close.status_code == 400
+    assert open_close.json()["error"]["code"] == "INVALID_STATUS_TRANSITION"
+
+    # 3. Move to IN_PROGRESS and attempt to close -> 400 INVALID_STATUS_TRANSITION
+    client.post(
+        f"/api/v1/tickets/{ticket_id}/assign",
+        headers=agent_headers,
+        json={"assigned_to": agent_user.id},
+    )
+    client.post(
+        f"/api/v1/tickets/{ticket_id}/status",
+        headers=agent_headers,
+        json={"status": "IN_PROGRESS"},
+    )
+    in_progress_close = client.post(f"/api/v1/tickets/{ticket_id}/close", headers=emp_headers)
+    assert in_progress_close.status_code == 400
+    assert in_progress_close.json()["error"]["code"] == "INVALID_STATUS_TRANSITION"
+
 

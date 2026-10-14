@@ -304,16 +304,18 @@ class TicketService:
         if target_status not in TicketStatus.ALL_STATUSES:
             raise ValidationException(f"Invalid status '{payload.status}'. Allowed: {TicketStatus.ALL_STATUSES}")
 
-        # RBAC: Support Agents and Admins can advance lifecycle statuses.
-        # Employees can confirm resolution and close their own tickets when in RESOLVED status.
-        is_employee_closing_own_resolved = (
-            current_user.role == UserRole.EMPLOYEE
-            and ticket.created_by == current_user.id
-            and ticket.status == TicketStatus.RESOLVED
-            and target_status == TicketStatus.CLOSED
-        )
-        if current_user.role not in [UserRole.SUPPORT_AGENT, UserRole.ADMIN] and not is_employee_closing_own_resolved:
-            raise ForbiddenException("Employees cannot manually change ticket status except closing resolved tickets. Use Reopen endpoint instead.", code="FORBIDDEN")
+        # RBAC Check: Employees can never manually change ticket status except closing their own resolved ticket
+        if current_user.role == UserRole.EMPLOYEE:
+            if target_status != TicketStatus.CLOSED:
+                raise ForbiddenException(
+                    "Employees cannot manually change ticket status. Use Reopen or Close endpoints.",
+                    code="FORBIDDEN",
+                )
+            if ticket.created_by != current_user.id:
+                raise ForbiddenException(
+                    "Only the original ticket creator can close a resolved ticket after verifying the resolution",
+                    code="FORBIDDEN",
+                )
 
         # Validate transition against state machine
         allowed_next = self.VALID_TRANSITIONS.get(ticket.status, [])
@@ -321,6 +323,13 @@ class TicketService:
             raise InvalidTransitionException(
                 f"Cannot transition ticket from '{ticket.status}' to '{target_status}'. Allowed transitions: {allowed_next}",
                 code="INVALID_STATUS_TRANSITION",
+            )
+
+        # RBAC Check: Only the original ticket creator can close a resolved ticket
+        if target_status == TicketStatus.CLOSED and ticket.created_by != current_user.id:
+            raise ForbiddenException(
+                "Only the original ticket creator can close a resolved ticket after verifying the resolution",
+                code="FORBIDDEN",
             )
 
         old_status = ticket.status
@@ -386,6 +395,54 @@ class TicketService:
         )
 
         logger.info(f"Ticket #{ticket.id} marked as RESOLVED by user {current_user.id}")
+        return self._enrich_ticket_response(self.ticket_repo.get_by_id_with_relations(updated.id))
+
+    def close_ticket(self, ticket_id: int, current_user: User) -> TicketResponse:
+        """
+        Closes a ticket after verification by the original ticket creator.
+        Enforces:
+        1. Ticket must be in RESOLVED status (unresolved tickets cannot be closed).
+        2. Only original ticket creator can close (Employee, Support Agent, or Admin creator).
+        """
+        ticket = self.ticket_repo.get_by_id_with_relations(ticket_id)
+        if not ticket:
+            raise NotFoundException(f"Ticket with ID {ticket_id} was not found", code="TICKET_NOT_FOUND")
+
+        # 1. Unresolved tickets cannot be closed
+        if ticket.status != TicketStatus.RESOLVED:
+            raise InvalidTransitionException(
+                f"Cannot close ticket in '{ticket.status}' status. Only RESOLVED tickets can be verified and closed.",
+                code="INVALID_STATUS_TRANSITION",
+            )
+
+        # 2. Permission check: Only original creator can close
+        if ticket.created_by != current_user.id:
+            raise ForbiddenException(
+                "Only the original ticket creator can close a resolved ticket after verifying the resolution",
+                code="FORBIDDEN",
+            )
+
+        old_status = ticket.status
+        ticket.status = TicketStatus.CLOSED
+        ticket.closed_at = datetime.now()
+
+        updated = self.ticket_repo.update(ticket)
+
+        self.ticket_repo.record_status_change(
+            ticket_id=ticket.id,
+            old_status=old_status,
+            new_status=TicketStatus.CLOSED,
+            changed_by=current_user.id,
+        )
+
+        self.audit_repo.log_action(
+            user_id=current_user.id,
+            action="TICKET_CLOSED",
+            entity_type="TICKET",
+            entity_id=ticket.id,
+        )
+
+        logger.info(f"Ticket #{ticket.id} CLOSED by original creator {current_user.id}")
         return self._enrich_ticket_response(self.ticket_repo.get_by_id_with_relations(updated.id))
 
     def reopen_ticket(self, ticket_id: int, payload: TicketReopen, current_user: User) -> TicketResponse:
