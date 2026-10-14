@@ -22,6 +22,7 @@ from app.routes.categories import router as categories_router
 from app.routes.tickets import router as tickets_router
 from app.routes.dashboard import router as dashboard_router
 from app.routes.audit import router as audit_router
+from app.routes.intelligence import router as intelligence_router
 
 
 @asynccontextmanager
@@ -77,6 +78,7 @@ app.include_router(categories_router, prefix=API_V1_PREFIX)
 app.include_router(tickets_router, prefix=API_V1_PREFIX)
 app.include_router(dashboard_router, prefix=API_V1_PREFIX)
 app.include_router(audit_router, prefix=API_V1_PREFIX)
+app.include_router(intelligence_router, prefix=API_V1_PREFIX)
 
 
 @app.get("/health", tags=["Health"])

@@ -17,6 +17,7 @@ export const CreateTicket = () => {
   const [description, setDescription] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [priority, setPriority] = useState('MEDIUM');
+  const [affectedUsers, setAffectedUsers] = useState(1);
   const [onBehalfOfId, setOnBehalfOfId] = useState('');
 
   const [categories, setCategories] = useState([]);
@@ -67,6 +68,7 @@ export const CreateTicket = () => {
         description,
         category_id: Number(categoryId),
         priority,
+        affected_users: Number(affectedUsers || 1),
       };
       if (isSupportOrAdmin && onBehalfOfId) {
         payload.on_behalf_of_id = Number(onBehalfOfId);
@@ -203,6 +205,21 @@ export const CreateTicket = () => {
                 <option value="CRITICAL">CRITICAL (4h SLA - Outage / Security)</option>
               </select>
             </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Affected Users / Impact Radius</label>
+            <input
+              type="number"
+              min="1"
+              className="form-input"
+              placeholder="e.g. 1 for yourself, 25 for whole department"
+              value={affectedUsers}
+              onChange={(e) => setAffectedUsers(Math.max(1, parseInt(e.target.value) || 1))}
+            />
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+              Estimate how many individuals or workstations are blocked by this incident.
+            </span>
           </div>
 
           <div className="form-group">

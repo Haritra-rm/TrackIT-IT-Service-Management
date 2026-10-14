@@ -43,6 +43,7 @@ class Ticket(Base):
     resolved_at = Column(DateTime(timezone=True), nullable=True)
     closed_at = Column(DateTime(timezone=True), nullable=True)
     resolution_notes = Column(Text, nullable=True)
+    affected_users = Column(Integer, default=1, nullable=True)
 
     # Relationships
     category = relationship("Category", back_populates="tickets")

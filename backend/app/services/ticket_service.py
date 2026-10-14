@@ -83,6 +83,7 @@ class TicketService:
             sla_remaining_hours=sla_info["sla_remaining_hours"],
             is_breached=sla_info["is_breached"],
             comments_count=len(ticket.comments) if hasattr(ticket, "comments") else 0,
+            affected_users=getattr(ticket, "affected_users", 1) or 1,
         )
 
     def create_ticket(self, payload: TicketCreate, creator: User) -> TicketResponse:
@@ -122,6 +123,7 @@ class TicketService:
             created_by=ticket_creator_id,
             created_at=now,
             due_at=due_at,
+            affected_users=payload.affected_users or 1,
         )
         created_ticket = self.ticket_repo.create(ticket)
 

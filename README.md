@@ -70,9 +70,11 @@ Role-Based Access Control (RBAC) is **strictly validated on the backend** via Fa
 
 ## 3. Key Features
 
-* **Intelligent Priority Advisor (Rule-Based):** Analyzes blast radius (affected users $\ge 20$), infrastructure criticality, and security flags to recommend objective severity (`LOW`, `MEDIUM`, `HIGH`, `CRITICAL`).
+* **Incident Intelligence & Related Ticket Detection (TF-IDF + Cosine Similarity):** Automatically analyzes ticket title and description against candidate tickets using normalized Term Frequency – Inverse Document Frequency (TF-IDF) and Cosine Similarity (threshold $\ge 0.65$) to surface duplicate or clustered issues.
+* **Smart Escalation Recommendation (Rule-Based Risk Engine):** Evaluates blast radius (affected users $\ge 20$), ticket priority severity, real-time SLA deadline pressure, and related ticket clusters to output transparent, deterministic risk scores and recommendations (`NORMAL`, `MONITOR`, `ESCALATION RECOMMENDED`).
+* **Intelligent Priority Advisor (Rule-Based):** Analyzes blast radius, infrastructure criticality, and security flags to recommend objective severity (`LOW`, `MEDIUM`, `HIGH`, `CRITICAL`).
 * **Real-Time SLA Engine:** Calculates dynamic deadlines (`due_at`) and badges tickets as `ON_TRACK`, `AT_RISK` ($\le 4\text{h}$ remaining), `BREACHED`, or `MET`.
-* **Finite State Machine Lifecycle:** Enforces legal transitions (`OPEN` $\rightarrow$ `ASSIGNED` $\rightarrow$ `IN_PROGRESS` $\rightarrow$ `RESOLVED` $\rightarrow$ `CLOSED`) with an authorized `REOPENED` loop.
+* **Finite State Machine Lifecycle:** Enforces legal transitions (`OPEN` $\rightarrow$ `ASSIGNED` $\rightarrow$ `IN_PROGRESS` $\rightarrow$ `RESOLVED` $\rightarrow$ `CLOSED`) with an authorized `REOPENED` loop and creator-only closure verification.
 * **Audit Trail & Chronological History:** Every status change records `old_status`, `new_status`, `changed_by`, and `changed_at`.
 * **Collaborative Discussion Thread:** Real-time commenting on tickets with role badges and timestamp attribution.
 * **Live Analytics & Executive Dashboard:** Real-time resolution rates, breach percentage, and agent throughput graphs (Chart.js).
@@ -86,9 +88,10 @@ Role-Based Access Control (RBAC) is **strictly validated on the backend** via Fa
 | **Backend** | Python 3.10+, FastAPI, Pydantic v2, SQLAlchemy 2.0, Alembic, Uvicorn |
 | **Database** | PostgreSQL 16 (Production / Docker), SQLite (Local Dev / Pytest) |
 | **Frontend** | React 18, Vite, React Router v6, Chart.js, Lucide Icons, Modern CSS |
-| **Security** | Salted Bcrypt Hashing, JWT (HS256), RBAC Dependencies, CORS |
+| **Intelligence** | Pure-Python TF-IDF Vectorizer & Cosine Similarity, Rule-Based Escalation Engine |
+| **Security** | Salted Bcrypt Hashing, JWT (HS256), RBAC Dependencies, Row-Level Isolation, CORS |
 | **DevOps & CI/CD** | Docker, Docker Compose, Nginx, GitHub Actions |
-| **Testing** | Pytest, HTTPX, FastAPI TestClient (31 Automated Tests) |
+| **Testing** | Pytest, HTTPX, FastAPI TestClient (69 Automated Tests, 100% Pass Rate) |
 
 ---
 

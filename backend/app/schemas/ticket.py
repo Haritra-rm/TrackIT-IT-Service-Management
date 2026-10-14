@@ -99,3 +99,4 @@ class TicketResponse(BaseModel):
     sla_remaining_hours: Optional[float] = None
     is_breached: bool = False
     comments_count: Optional[int] = 0
+    affected_users: Optional[int] = 1

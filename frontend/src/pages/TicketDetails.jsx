@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { ticketService } from '../services/ticketService';
+import { intelligenceService } from '../services/intelligenceService';
 import { userService } from '../services/userService';
 import { StatusBadge } from '../components/StatusBadge';
 import { PriorityBadge } from '../components/PriorityBadge';
@@ -17,6 +18,8 @@ import {
   Calendar,
   CheckCircle2,
   AlertCircle,
+  AlertTriangle,
+  CheckCircle,
   MessageSquare,
   History,
   Send,
@@ -26,6 +29,10 @@ import {
   RotateCcw,
   Trash2,
   FileCheck,
+  Sparkles,
+  ShieldAlert,
+  Layers,
+  ExternalLink,
 } from 'lucide-react';
 
 export const TicketDetails = () => {
@@ -37,6 +44,12 @@ export const TicketDetails = () => {
   const [comments, setComments] = useState([]);
   const [history, setHistory] = useState([]);
   const [agents, setAgents] = useState([]);
+
+  // Intelligence State (Related Tickets & Escalation Assessment)
+  const [relatedTickets, setRelatedTickets] = useState([]);
+  const [relatedLoading, setRelatedLoading] = useState(true);
+  const [escalation, setEscalation] = useState(null);
+  const [escalationLoading, setEscalationLoading] = useState(true);
 
   const [newComment, setNewComment] = useState('');
   const [commentLoading, setCommentLoading] = useState(false);
@@ -76,6 +89,19 @@ export const TicketDetails = () => {
       if (isSupportOrAdmin) {
         userService.getAgents().then((ag) => setAgents(ag || []));
       }
+
+      // Fetch Incident Intelligence in parallel
+      setRelatedLoading(true);
+      setEscalationLoading(true);
+      intelligenceService.getRelatedTickets(id)
+        .then((res) => setRelatedTickets(res?.related_tickets || []))
+        .catch((e) => console.debug('Related tickets error:', e))
+        .finally(() => setRelatedLoading(false));
+
+      intelligenceService.getEscalationAssessment(id)
+        .then((res) => setEscalation(res))
+        .catch((e) => console.debug('Escalation error:', e))
+        .finally(() => setEscalationLoading(false));
     } catch (err) {
       setError(err.message || 'Failed to load ticket details');
     } finally {
@@ -459,6 +485,204 @@ export const TicketDetails = () => {
                 )}
               </div>
             )}
+          </div>
+
+          {/* Incident Intelligence Section */}
+          <div className="card" style={{ border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#e0e7ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Sparkles size={18} color="#4338ca" />
+                </div>
+                <div>
+                  <h2 style={{ fontSize: '1.08rem', fontWeight: 700, color: 'var(--text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    Incident Intelligence
+                  </h2>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    Similarity-based related ticket analysis & objective rule-based escalation assessment
+                  </span>
+                </div>
+              </div>
+              <span style={{ fontSize: '0.72rem', padding: '3px 8px', borderRadius: '12px', backgroundColor: '#f1f5f9', color: '#475569', fontWeight: 600 }}>
+                TF-IDF + Cosine Similarity
+              </span>
+            </div>
+
+            {/* 2-Column Responsive Grid for Related Tickets & Escalation Assessment */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '18px' }}>
+              
+              {/* Sub-Panel 1: Possible Related Tickets */}
+              <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 'var(--radius-sm)', padding: '16px', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, fontSize: '0.88rem', color: '#1e293b' }}>
+                    <Layers size={16} color="#3b82f6" /> Possible Related Tickets
+                  </div>
+                  <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>
+                    {relatedLoading ? 'Scanning...' : `${relatedTickets.length} found`}
+                  </span>
+                </div>
+
+                {relatedLoading ? (
+                  <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                    Scanning candidate tickets...
+                  </div>
+                ) : relatedTickets.length === 0 ? (
+                  <div style={{ padding: '24px 16px', textAlign: 'center', backgroundColor: '#ffffff', borderRadius: 'var(--radius-xs)', border: '1px dashed #cbd5e1', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                    <p style={{ margin: 0, fontSize: '0.86rem', fontWeight: 600, color: '#64748b' }}>
+                      No potentially related tickets found.
+                    </p>
+                    <p style={{ margin: '4px 0 0', fontSize: '0.75rem', color: '#94a3b8' }}>
+                      No active or historical tickets exceeded the similarity threshold.
+                    </p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+                    {relatedTickets.map((match) => (
+                      <div
+                        key={match.ticket_id}
+                        onClick={() => navigate(`/tickets/${match.ticket_id}`)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '10px 12px',
+                          backgroundColor: '#ffffff',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: 'var(--radius-xs)',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.boxShadow = '0 2px 6px rgba(59,130,246,0.1)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.boxShadow = 'none'; }}
+                        title="Click to inspect related ticket"
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                          <span style={{ fontFamily: 'JetBrains Mono', fontSize: '0.78rem', fontWeight: 700, color: '#3b82f6', flexShrink: 0 }}>
+                            #{match.ticket_id}
+                          </span>
+                          <span style={{ fontSize: '0.84rem', fontWeight: 600, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {match.title}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, marginLeft: '8px' }}>
+                          <span style={{
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            padding: '2px 8px',
+                            borderRadius: '10px',
+                            backgroundColor: '#eff6ff',
+                            color: '#1d4ed8',
+                            border: '1px solid #bfdbfe',
+                          }}>
+                            {match.similarity_percentage}%
+                          </span>
+                          <ExternalLink size={13} color="#94a3b8" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Sub-Panel 2: Escalation Assessment */}
+              <div style={{
+                backgroundColor: escalationLoading ? '#f8fafc' : (escalation?.recommendation === 'ESCALATION RECOMMENDED' ? '#fff1f2' : (escalation?.recommendation === 'MONITOR' ? '#fffbeb' : '#f0fdf4')),
+                border: `1px solid ${escalationLoading ? '#e2e8f0' : (escalation?.recommendation === 'ESCALATION RECOMMENDED' ? '#fecdd3' : (escalation?.recommendation === 'MONITOR' ? '#fde68a' : '#bbf7d0'))}`,
+                borderRadius: 'var(--radius-sm)',
+                padding: '16px',
+                display: 'flex',
+                flexDirection: 'column',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, fontSize: '0.88rem', color: '#1e293b' }}>
+                    <ShieldAlert size={16} color={escalation?.recommendation === 'ESCALATION RECOMMENDED' ? '#e11d48' : (escalation?.recommendation === 'MONITOR' ? '#d97706' : '#059669')} /> Escalation Assessment
+                  </div>
+                  {escalation && (
+                    <span style={{
+                      fontSize: '0.72rem',
+                      fontWeight: 800,
+                      padding: '2px 8px',
+                      borderRadius: '12px',
+                      backgroundColor: escalation.recommendation === 'ESCALATION RECOMMENDED' ? '#ffe4e6' : (escalation.recommendation === 'MONITOR' ? '#fef3c7' : '#dcfce7'),
+                      color: escalation.recommendation === 'ESCALATION RECOMMENDED' ? '#be123c' : (escalation.recommendation === 'MONITOR' ? '#b45309' : '#15803d'),
+                      letterSpacing: '0.02em',
+                    }}>
+                      Risk Score: {escalation.risk_score}
+                    </span>
+                  )}
+                </div>
+
+                {escalationLoading ? (
+                  <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                    Evaluating risk indicators...
+                  </div>
+                ) : !escalation ? (
+                  <div style={{ padding: '16px', textAlign: 'center', color: '#64748b', fontSize: '0.85rem' }}>
+                    Insufficient data for escalation assessment.
+                  </div>
+                ) : (
+                  <div>
+                    {/* Main Recommendation Badge */}
+                    <div style={{
+                      padding: '10px 14px',
+                      borderRadius: 'var(--radius-xs)',
+                      backgroundColor: escalation.recommendation === 'ESCALATION RECOMMENDED' ? '#e11d48' : (escalation.recommendation === 'MONITOR' ? '#d97706' : '#16a34a'),
+                      color: '#ffffff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      marginBottom: '14px',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {escalation.recommendation === 'ESCALATION RECOMMENDED' ? <AlertCircle size={18} /> : (escalation.recommendation === 'MONITOR' ? <AlertTriangle size={18} /> : <CheckCircle size={18} />)}
+                        <span style={{ fontWeight: 800, fontSize: '0.88rem', letterSpacing: '0.03em' }}>
+                          {escalation.recommendation}
+                        </span>
+                      </div>
+                      <span style={{ fontSize: '0.72rem', opacity: 0.9 }}>
+                        {escalation.risk_score >= 5 ? 'High Urgency' : (escalation.risk_score >= 3 ? 'Review Required' : 'Standard Queue')}
+                      </span>
+                    </div>
+
+                    {/* Key Metric Chips */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginBottom: '14px' }}>
+                      <div style={{ backgroundColor: 'rgba(255,255,255,0.7)', padding: '6px 10px', borderRadius: '4px', fontSize: '0.78rem' }}>
+                        <span style={{ color: '#64748b', display: 'block', fontSize: '0.68rem', textTransform: 'uppercase' }}>Priority</span>
+                        <strong>{ticket.priority}</strong>
+                      </div>
+                      <div style={{ backgroundColor: 'rgba(255,255,255,0.7)', padding: '6px 10px', borderRadius: '4px', fontSize: '0.78rem' }}>
+                        <span style={{ color: '#64748b', display: 'block', fontSize: '0.68rem', textTransform: 'uppercase' }}>Affected Users</span>
+                        <strong>{escalation.affected_users}</strong>
+                      </div>
+                      <div style={{ backgroundColor: 'rgba(255,255,255,0.7)', padding: '6px 10px', borderRadius: '4px', fontSize: '0.78rem' }}>
+                        <span style={{ color: '#64748b', display: 'block', fontSize: '0.68rem', textTransform: 'uppercase' }}>Related Tickets</span>
+                        <strong>{escalation.related_tickets_count}</strong>
+                      </div>
+                      <div style={{ backgroundColor: 'rgba(255,255,255,0.7)', padding: '6px 10px', borderRadius: '4px', fontSize: '0.78rem' }}>
+                        <span style={{ color: '#64748b', display: 'block', fontSize: '0.68rem', textTransform: 'uppercase' }}>SLA Status</span>
+                        <strong>{escalation.sla_status}</strong>
+                      </div>
+                    </div>
+
+                    {/* Reasons List */}
+                    <div>
+                      <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block', marginBottom: '6px' }}>
+                        Assessment Reasons:
+                      </span>
+                      <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '0.82rem', color: '#334155', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {escalation.reasons.map((r, idx) => (
+                          <li key={idx} style={{ lineHeight: 1.4 }}>
+                            {r.replace(/^-\s*/, '')}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+            </div>
           </div>
 
           {/* Comments Discussion Section */}
