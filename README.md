@@ -44,7 +44,25 @@ In growing organizations, IT service requests (hardware defects, VPN failures, a
 * **Lack of Visibility**: IT leadership lacks empirical metrics on Mean Time to Resolution (MTTR), recurring failure categories, and agent caseloads.
 
 **TrackIT** establishes an accountable, structured lifecycle:
-$$\text{Employee Submission} \longrightarrow \text{Automated SLA/Priority Triage} \longrightarrow \text{Agent Investigation} \longrightarrow \text{Resolution} \longrightarrow \text{Creator Verification \& Closure}$$
+
+```text
+Employee Submission
+        ↓
+Automated SLA / Priority Triage
+        ↓
+Agent Assignment
+        ↓
+Investigation & Progress
+        ↓
+Resolution
+        ↓
+Creator Verification
+        ↓
+Closure
+
+Reopen path:
+RESOLVED → REOPENED → IN_PROGRESS
+```
 
 ---
 
