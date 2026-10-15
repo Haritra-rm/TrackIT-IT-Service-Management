@@ -217,7 +217,10 @@ stateDiagram-v2
 * **`LOW`**: **72 Hours** SLA resolution target.
 
 ### Real-Time SLA Evaluation Rules:
-* **Due Date Formula**: $\text{due\_at} = \text{created\_at} + \text{SLA\_HOURS}[\text{priority}]$.
+* **Due Date Formula**:
+  ```text
+  due_at = created_at + SLA_HOURS[priority]
+  ```
 * **`ON_TRACK`**: Active ticket where elapsed duration is $< 75\%$ of total SLA window.
 * **`AT_RISK`**: Active ticket where elapsed duration is $\ge 75\%$ of SLA window, or $\le 1.0\text{h}$ remains.
 * **`BREACHED`**: Active ticket past its `due_at` timestamp, or ticket resolved after deadline.
