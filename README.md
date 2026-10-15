@@ -8,7 +8,7 @@
 [![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF.svg)](https://github.com/features/actions)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-**TrackIT** is an enterprise IT Service Management (ITSM) and Issue Tracking platform designed to streamline internal technical support operations. It replaces chaotic, informal support requests with a structured, auditable service management workflow featuring rule-based priority advisory, real-time SLA deadline tracking, incident intelligence, and operational executive analytics.
+**TrackIT** is a production-inspired IT Service Management and Issue Tracking platform designed to streamline internal technical support operations. It replaces chaotic, informal support requests with a structured, auditable service management workflow featuring rule-based priority advisory, real-time SLA deadline tracking, incident intelligence, and operational executive analytics.
 
 Built using **Python (FastAPI)**, **PostgreSQL (SQLAlchemy & Alembic)**, and **React (Vite & Modern CSS)**, TrackIT is architected as an interview-ready, production-style software platform demonstrating clean architecture, OOP principles, practical DSA, and comprehensive automated test coverage.
 
@@ -284,11 +284,11 @@ cp .env.example .env
 ```
 
 ### Step 2: Backend Setup
-```bash
+```powershell
 # Create and activate Python virtual environment
 python -m venv venv
 .\venv\Scripts\Activate.ps1    # Windows PowerShell
-# source venv/bin/activate      # Linux / macOS
+# source venv/bin/activate     # Linux / macOS
 
 # Install backend dependencies
 pip install -r backend/requirements.txt
