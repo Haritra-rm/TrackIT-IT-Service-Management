@@ -69,7 +69,7 @@ export const AuditLogs = () => {
             System Security & Audit Trail
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: '4px' }}>
-            Immutable chronological logging of all critical actions, mutations, and user activities.
+            Append-only chronological logging of critical actions, mutations, and user activities.
           </p>
         </div>
 
