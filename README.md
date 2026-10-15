@@ -390,18 +390,3 @@ TrackIT includes interactive documentation and a pre-configured Postman collecti
 * **Interactive Swagger UI**: `http://127.0.0.1:8000/docs`
 * **Interactive ReDoc**: `http://127.0.0.1:8000/redoc`
 * **Postman Collection**: `trackit_postman_collection.json` (includes automatic token extraction for subsequent requests).
-
----
-
-## 17. Documentation Directory
-
-For deeper architectural, database, and interview reviews, consult the project documentation:
-
-* [Product Requirements & User Stories](file:///USER_STORIES.md)
-* [System Architecture & Clean Architecture](file:///ARCHITECTURE.md)
-* [Database Design & ER Diagram](file:///DATABASE.md)
-* [REST API Specification](file:///API.md)
-* [Security & Threat Model](file:///SECURITY.md)
-* [Automated Testing Strategy](file:///TESTING.md)
-* [Deployment & Cloud Architecture](file:///DEPLOYMENT.md)
-* [Interview Preparation & Architectural Q&A](file:///docs/interview/01_project_overview.md)
