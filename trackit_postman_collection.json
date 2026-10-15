@@ -63,7 +63,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@trackit.internal\",\n  \"password\": \"Admin@123\"\n}"
+              "raw": "{\n  \"email\": \"admin@trackit.internal\",\n  \"password\": \"your_secure_password\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/auth/login",

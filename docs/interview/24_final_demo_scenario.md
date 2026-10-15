@@ -21,7 +21,7 @@ This document provides a rock-solid, step-by-step interview demonstration script
 
 ### Step 1: Log In as Employee
 1. Open the web browser at [http://localhost:5173](http://localhost:5173).
-2. On the login card, click the **Employee** button (auto-fills `emp.alice@trackit.internal` / `Employee@123`).
+2. On the login card, enter your employee credentials (`emp.alice@trackit.internal`).
 3. Click **Sign In to Workspace**.
 4. You are directed to the **Employee Portal** showing your personal tickets.
 
@@ -55,7 +55,7 @@ This document provides a rock-solid, step-by-step interview demonstration script
 
 ### Step 3: Triage & Assignment as Support Agent
 1. In the top navbar, click **Sign Out**.
-2. Click the **Agent** demo login button (`agent.sarah@trackit.internal` / `Agent@123`) and sign in.
+2. Sign in using your support agent credentials (`agent.sarah@trackit.internal`).
 3. You are directed to the **Support Agent Workspace**.
 4. Navigate to **All Tickets** and click the newly created ticket `#1` (`VPN connectivity drops every 10 minutes`).
 5. Click the **Assign to Me** button:
@@ -97,7 +97,7 @@ This document provides a rock-solid, step-by-step interview demonstration script
 
 ### Step 7: Executive KPI Verification (Admin Dashboard)
 1. Sign out of the employee account.
-2. Click the **Admin** demo button (`admin@trackit.internal` / `Admin@123`) and sign in.
+2. Sign in using your administrator credentials (`admin@trackit.internal`).
 3. Observe the **Executive Analytics Dashboard**:
    - **Total Tickets**: `1`
    - **Closed Tickets**: `1`
@@ -108,4 +108,4 @@ This document provides a rock-solid, step-by-step interview demonstration script
    - **Tickets by Priority**: Chart displays 100% `HIGH`.
    - **Agent Performance**: Shows `Sarah Jenkins` with 1 resolved ticket and 100% SLA compliance.
 4. Click **Audit Logs** in the sidebar:
-   - Inspect the immutable chronological audit log verifying every action: `TICKET_CREATED`, `TICKET_ASSIGNED`, `TICKET_STATUS_CHANGED`, `TICKET_RESOLVED`, and `TICKET_STATUS_CHANGED` to `CLOSED`.
+   - Inspect the append-only chronological audit log verifying critical actions: `TICKET_CREATED`, `TICKET_ASSIGNED`, `TICKET_STATUS_CHANGED`, `TICKET_RESOLVED`, and `TICKET_STATUS_CHANGED` to `CLOSED`.

@@ -8,9 +8,9 @@
 [![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF.svg)](https://github.com/features/actions)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-**TrackIT** is an enterprise-grade IT Service Management (ITSM) and Issue Tracking platform designed to streamline internal workplace technical support. It bridges employee issue reporting, smart priority assessment, strict finite-state ticket lifecycles, real-time SLA deadline monitoring, and operational executive analytics.
+**TrackIT** is an enterprise IT Service Management (ITSM) and Issue Tracking platform designed to streamline internal technical support operations. It replaces chaotic, informal support requests with a structured, auditable service management workflow featuring rule-based priority advisory, real-time SLA deadline tracking, incident intelligence, and operational executive analytics.
 
-Built using **Python (FastAPI)**, **PostgreSQL (SQLAlchemy & Alembic)**, and **React (Vite & Modern CSS)**, TrackIT is architected as an interview-ready, production-style software product demonstrating clean architecture, OOP principles, practical DSA, rigorous automated testing, and cloud deployment readiness.
+Built using **Python (FastAPI)**, **PostgreSQL (SQLAlchemy & Alembic)**, and **React (Vite & Modern CSS)**, TrackIT is architected as an interview-ready, production-style software platform demonstrating clean architecture, OOP principles, practical DSA, and comprehensive automated test coverage.
 
 ---
 
@@ -18,104 +18,121 @@ Built using **Python (FastAPI)**, **PostgreSQL (SQLAlchemy & Alembic)**, and **R
 1. [Problem Statement & Product Vision](#1-problem-statement--product-vision)
 2. [User Personas & Role Permissions](#2-user-personas--role-permissions)
 3. [Key Features](#3-key-features)
-4. [Tech Stack](#4-tech-stack)
-5. [Architecture & Design Decisions](#5-architecture--design-decisions)
+4. [Technology Stack](#4-technology-stack)
+5. [Architecture & Project Structure](#5-architecture--project-structure)
 6. [Database Schema & ER Diagram](#6-database-schema--er-diagram)
 7. [Core Ticket Lifecycle & Finite State Machine](#7-core-ticket-lifecycle--finite-state-machine)
 8. [Smart Priority Advisor & Dynamic SLA Engine](#8-smart-priority-advisor--dynamic-sla-engine)
-9. [Local Development Quickstart](#9-local-development-quickstart)
-10. [Docker & Docker Compose Deployment](#10-docker--docker-compose-deployment)
-11. [Automated Testing Suite](#11-automated-testing-suite)
-12. [API Reference & Postman Collection](#12-api-reference--postman-collection)
-13. [Demo Login Credentials](#13-demo-login-credentials)
-14. [AWS Cloud Deployment Architecture](#14-aws-cloud-deployment-architecture)
-15. [Resume-Ready Project Description](#15-resume-ready-project-description)
-16. [Documentation Directory](#16-documentation-directory)
+9. [Incident Intelligence Engines](#9-incident-intelligence-engines)
+10. [Authentication & Security](#10-authentication--security)
+11. [Append-Only Audit Trail](#11-append-only-audit-trail)
+12. [Dashboard Analytics & KPIs](#12-dashboard-analytics--kpis)
+13. [Local Development Quickstart](#13-local-development-quickstart)
+14. [Docker & Containerized Deployment](#14-docker--containerized-deployment)
+15. [Automated Testing Suite](#15-automated-testing-suite)
+16. [API Documentation & Postman Collection](#16-api-documentation--postman-collection)
+17. [Documentation Directory](#17-documentation-directory)
 
 ---
 
 ## 1. Problem Statement & Product Vision
 
-In fast-growing organizations, IT complaints (laptop defects, VPN failures, access requests, phishing reports) are typically submitted via fragmented channels: unstructured emails, WhatsApp chats, or direct Slack pings. This leads to:
-* Issues being dropped or ignored with zero ownership.
-* No service level agreements (SLAs) to guarantee turnaround deadlines.
-* Inability for leadership to measure recurring hardware failures, agent throughput, or organizational MTTR (Mean Time to Resolution).
+In growing organizations, IT service requests (hardware defects, VPN failures, access grants, software provisioning) frequently occur over informal, scattered channels: emails, chat messages, or walk-ups. This results in:
+* **Zero Accountability**: Issues slip through the cracks without assigned ownership.
+* **No SLA Predictability**: Absence of objective deadlines to guarantee resolution timeframes.
+* **Incident Duplication**: Multiple users file redundant tickets for identical underlying infrastructure outages without detection.
+* **Lack of Visibility**: IT leadership lacks empirical metrics on Mean Time to Resolution (MTTR), recurring failure categories, and agent caseloads.
 
-**TrackIT** replaces ad-hoc reporting with structured, auditable service management:
-$$\text{Employee Report} \longrightarrow \text{Automated SLA/Priority Triage} \longrightarrow \text{Agent Investigation} \longrightarrow \text{Resolution} \longrightarrow \text{Verified Closure}$$
+**TrackIT** establishes an accountable, structured lifecycle:
+$$\text{Employee Submission} \longrightarrow \text{Automated SLA/Priority Triage} \longrightarrow \text{Agent Investigation} \longrightarrow \text{Resolution} \longrightarrow \text{Creator Verification \& Closure}$$
 
 ---
 
 ## 2. User Personas & Role Permissions
 
-Role-Based Access Control (RBAC) is **strictly validated on the backend** via FastAPI dependency injection, never solely on the frontend.
+Role-Based Access Control (RBAC) is **strictly enforced at the backend API layer** via FastAPI dependency injection and query-level isolation:
 
-| Capability / Action | EMPLOYEE | SUPPORT_AGENT | ADMIN |
-| :--- | :---: | :---: | :---: |
-| Self-Register & Log In | ✅ | ✅ | ✅ |
-| View Own Reported Tickets | ✅ | ✅ | ✅ |
-| View Other Employees' Tickets | ❌ *(403 Forbidden)* | ✅ | ✅ |
-| Raise / Submit Ticket | ✅ | ✅ | ✅ |
-| Assign / Reassign Agent | ❌ *(403 Forbidden)* | ✅ | ✅ |
-| Advance Status (Triage / In Progress) | ❌ *(403 Forbidden)* | ✅ | ✅ |
-| Resolve Ticket (with mandatory notes) | ❌ *(403 Forbidden)* | ✅ | ✅ |
-| Reopen Ticket (if issue persists) | ✅ *(Own only)* | ✅ | ✅ |
-| Permanently Delete Ticket | ❌ *(403 Forbidden)* | ❌ *(403 Forbidden)* | ✅ |
-| View Operational Reports & KPIs | ❌ *(403 Forbidden)* | ✅ | ✅ |
-| User Directory & Activate/Deactivate | ❌ *(403 Forbidden)* | ❌ *(403 Forbidden)* | ✅ |
-| Category Management | ❌ *(403 Forbidden)* | ❌ *(403 Forbidden)* | ✅ |
-| System Security Audit Trail | ❌ *(403 Forbidden)* | ❌ *(403 Forbidden)* | ✅ |
+| Capability / Action | EMPLOYEE | SUPPORT_AGENT | ADMIN | Enforcement Mechanism |
+| :--- | :---: | :---: | :---: | :--- |
+| Self-Register & Log In | ✅ | ✅ | ✅ | `POST /auth/register`, `POST /auth/login` |
+| View Own Reported Tickets | ✅ | ✅ | ✅ | Query automatically filtered by `created_by` |
+| View Global Ticket Queue | ❌ *(403 Forbidden)* | ✅ | ✅ | Route dependency check |
+| Submit Ticket (Self) | ✅ | ✅ | ✅ | `POST /tickets` |
+| Submit Ticket on Behalf of Employee | ❌ *(403 Forbidden)* | ✅ | ✅ | `on_behalf_of_id` guarded by role check |
+| Assign / Claim Ticket | ❌ *(403 Forbidden)* | ✅ | ✅ | `POST /tickets/{id}/assign` |
+| Advance Status (`IN_PROGRESS`) | ❌ *(403 Forbidden)* | ✅ | ✅ | `POST /tickets/{id}/status` |
+| Resolve Ticket (Mandatory Notes) | ❌ *(403 Forbidden)* | ✅ | ✅ | `POST /tickets/{id}/resolve` |
+| Verify & Close Resolved Ticket | ✅ *(Creator Only)* | ✅ *(Creator Only)* | ✅ *(Creator Only)* | `POST /tickets/{id}/close` verifies creator ID |
+| Reopen Ticket (If Problem Persists) | ✅ *(Own Only)* | ✅ | ✅ | `POST /tickets/{id}/reopen` |
+| Permanently Delete Ticket | ❌ *(403 Forbidden)* | ❌ *(403 Forbidden)* | ✅ | `DELETE /tickets/{id}` requires `require_admin` |
+| User Directory & Status Toggles | ❌ *(403 Forbidden)* | ❌ *(403 Forbidden)* | ✅ | `PATCH /users/{id}/status` |
+| Category Management | ❌ Read-Only | ❌ Read-Only | ✅ | `POST/PUT /categories` |
+| System Audit Trail | ❌ *(403 Forbidden)* | ❌ *(403 Forbidden)* | ✅ | `GET /audit-logs` |
 
 ---
 
 ## 3. Key Features
 
-* **Incident Intelligence & Related Ticket Detection (TF-IDF + Cosine Similarity):** Automatically analyzes ticket title and description against candidate tickets using normalized Term Frequency – Inverse Document Frequency (TF-IDF) and Cosine Similarity (threshold $\ge 0.65$) to surface duplicate or clustered issues.
-* **Smart Escalation Recommendation (Rule-Based Risk Engine):** Evaluates blast radius (affected users $\ge 20$), ticket priority severity, real-time SLA deadline pressure, and related ticket clusters to output transparent, deterministic risk scores and recommendations (`NORMAL`, `MONITOR`, `ESCALATION RECOMMENDED`).
-* **Intelligent Priority Advisor (Rule-Based):** Analyzes blast radius, infrastructure criticality, and security flags to recommend objective severity (`LOW`, `MEDIUM`, `HIGH`, `CRITICAL`).
-* **Real-Time SLA Engine:** Calculates dynamic deadlines (`due_at`) and badges tickets as `ON_TRACK`, `AT_RISK` ($\le 4\text{h}$ remaining), `BREACHED`, or `MET`.
-* **Finite State Machine Lifecycle:** Enforces legal transitions (`OPEN` $\rightarrow$ `ASSIGNED` $\rightarrow$ `IN_PROGRESS` $\rightarrow$ `RESOLVED` $\rightarrow$ `CLOSED`) with an authorized `REOPENED` loop and creator-only closure verification.
-* **Audit Trail & Chronological History:** Every status change records `old_status`, `new_status`, `changed_by`, and `changed_at`.
-* **Collaborative Discussion Thread:** Real-time commenting on tickets with role badges and timestamp attribution.
-* **Live Analytics & Executive Dashboard:** Real-time resolution rates, breach percentage, and agent throughput graphs (Chart.js).
+* **Incident Intelligence & Related Ticket Detection**: Pure-Python TF-IDF and Cosine Similarity engine that surfaces similar historical or active tickets ($\ge 0.65$ threshold) without external ML dependencies.
+* **Smart Escalation Assessment**: Transparent, explainable rule engine that evaluates priority severity, blast radius, SLA pressure, and cluster density to generate actionable risk recommendations (`NORMAL`, `MONITOR`, `ESCALATION RECOMMENDED`).
+* **Smart Priority Advisor**: Interactive blast-radius assessment recommending objective priority (`LOW`, `MEDIUM`, `HIGH`, `CRITICAL`) based on affected user count, outages, and security indicators.
+* **Automated Dynamic SLA Engine**: Computes exact resolution deadlines (`due_at`) and live indicators (`ON_TRACK`, `AT_RISK`, `BREACHED`, `MET`) with proportional threshold evaluation.
+* **Finite State Machine Lifecycle**: Validates legal status transitions and enforces mandatory diagnostic notes on resolution and creator-only closure verification.
+* **Append-Only Application Audit Trail**: Logs critical system mutations with actor ID, timestamp, and JSON metadata; no mutation or deletion routes exist.
+* **Collaborative Discussion Threads**: Multi-user comments with role badges and timestamp attribution.
+* **Executive Analytics & Reporting**: Real-time MTTR, First Response Time, SLA compliance percentage, and caseload metrics.
 
 ---
 
-## 4. Tech Stack
+## 4. Technology Stack
 
-| Tier | Technologies |
+| Layer | Technologies |
 | :--- | :--- |
-| **Backend** | Python 3.10+, FastAPI, Pydantic v2, SQLAlchemy 2.0, Alembic, Uvicorn |
-| **Database** | PostgreSQL 16 (Production / Docker), SQLite (Local Dev / Pytest) |
-| **Frontend** | React 18, Vite, React Router v6, Chart.js, Lucide Icons, Modern CSS |
-| **Intelligence** | Pure-Python TF-IDF Vectorizer & Cosine Similarity, Rule-Based Escalation Engine |
-| **Security** | Salted Bcrypt Hashing, JWT (HS256), RBAC Dependencies, Row-Level Isolation, CORS |
-| **DevOps & CI/CD** | Docker, Docker Compose, Nginx, GitHub Actions |
+| **Backend Framework** | Python 3.10+, FastAPI, Pydantic v2, Uvicorn |
+| **Database & ORM** | PostgreSQL 16 (Production/Docker), SQLite (Local Dev/Pytest), SQLAlchemy 2.0, Alembic |
+| **Frontend Framework** | React 18, Vite, React Router v6, Chart.js, Lucide Icons, Modern CSS |
+| **Security & Auth** | Salted Bcrypt Hashing, JWT (HS256, 8-hour TTL), Role-Based Access Control (RBAC) |
+| **Intelligence** | Pure-Python Vectorizer (TF-IDF), Cosine Similarity, Rule-Based Escalation Scoring |
+| **DevOps & Containers** | Docker, Docker Compose, Nginx, GitHub Actions CI |
 | **Testing** | Pytest, HTTPX, FastAPI TestClient (69 Automated Tests, 100% Pass Rate) |
 
 ---
 
-## 5. Architecture & Design Decisions
+## 5. Architecture & Project Structure
 
-TrackIT follows the **Clean Architecture Modular Monolith** pattern:
+TrackIT is implemented following the **Clean Architecture Modular Monolith** pattern:
 
 ```
-backend/app/
-├── core/            # Configuration, Security (Bcrypt/JWT), Logging, Exceptions, RBAC Dependencies
-├── database/        # Connection pooling, Sessionmaker, Declarative Base
-├── models/          # SQLAlchemy ORM models (User, Ticket, Category, Comment, History, Audit)
-├── schemas/         # Pydantic v2 DTOs (Request input validation & outbound serialization)
-├── repositories/    # Data Access Layer (Repository Pattern, eager loading, pagination)
-├── services/        # Business Logic Layer (SLA Service, Priority Engine, Ticket FSM)
-├── routes/          # REST Presentation Layer (Versioned v1 endpoints)
-└── middleware/      # Structured Request Logging & Centralized Error Handling
+├── .github/workflows/ci.yml       # GitHub Actions automated test & build pipeline
+├── backend/
+│   ├── app/
+│   │   ├── core/                  # Security (Bcrypt/JWT), Config, Logging, Exceptions, RBAC Guards
+│   │   ├── database/              # Engine, Connection pooling, Sessionmaker, Declarative Base
+│   │   ├── middleware/            # Structured Request Logging & Centralized Error Handlers
+│   │   ├── models/                # SQLAlchemy ORM Models (User, Ticket, Category, Comment, History, Audit)
+│   │   ├── repositories/          # Data Access Layer (Repository Pattern, eager loading, pagination)
+│   │   ├── routes/                # REST Presentation Layer (Versioned v1 endpoints)
+│   │   ├── schemas/               # Pydantic v2 DTOs (Request validation & response serialization)
+│   │   └── services/              # Domain Business Logic (SLA, Priority, Intelligence, FSM)
+│   ├── alembic/                   # Database schema migrations
+│   ├── tests/                     # 69 Automated Unit, Integration, and API tests
+│   ├── clean_data.py              # Zero-downtime test data reset utility
+│   ├── requirements.txt           # Pinned backend dependencies
+│   └── seed.py                    # Database initialization script
+├── frontend/
+│   ├── src/
+│   │   ├── components/            # Reusable UI components (Modals, Badges, Tables, Navbars)
+│   │   ├── context/               # AuthContext session provider
+│   │   ├── hooks/                 # Custom React hooks (useAuth)
+│   │   ├── pages/                 # Role workspaces (Employee, Agent, Admin, TicketDetails, AuditLogs)
+│   │   ├── services/              # Axios API client services
+│   │   └── index.css              # Responsive SaaS styling and design tokens
+│   ├── package.json               # Frontend dependencies & scripts
+│   └── vite.config.js             # Vite bundler configuration
+├── docker-compose.yml             # Full-stack orchestration (PostgreSQL, Backend, Frontend)
+├── .env.example                   # Environment configuration template
+└── README.md                      # Project documentation
 ```
-
-* **OOP Principles Applied:**
-  * **Encapsulation:** State machines and helper logic remain private to service modules.
-  * **Abstraction:** Controllers interact with abstract repository contracts.
-  * **Inheritance & Generics:** `BaseRepository[T]` encapsulates common database operations.
-  * **Polymorphism:** Dynamic dashboard aggregation queries based on the caller's role.
 
 ---
 
@@ -133,45 +150,133 @@ erDiagram
     TICKETS ||--o{ TICKET_STATUS_HISTORY : "records"
 ```
 
-All 6 relational tables (`users`, `categories`, `tickets`, `comments`, `ticket_status_history`, `audit_logs`) are modeled in **Third Normal Form (3NF)**. Primary key and foreign key indexes optimize lookups from $O(N)$ sequential scans to $O(\log N)$ B-Tree seeks.
+All 6 relational tables (`users`, `categories`, `tickets`, `comments`, `ticket_status_history`, `audit_logs`) adhere to **Third Normal Form (3NF)**. Foreign key constraints and composite indexes eliminate sequential table scans.
 
 ---
 
 ## 7. Core Ticket Lifecycle & Finite State Machine
 
+Every IT service request follows an immutable, strictly validated state machine defined in `TicketService.VALID_TRANSITIONS`:
+
 ```mermaid
 stateDiagram-v2
-    [*] --> OPEN : Issue Submitted
-    OPEN --> ASSIGNED : Support Agent Assigned
-    ASSIGNED --> IN_PROGRESS : Investigation Started
-    IN_PROGRESS --> RESOLVED : Remedy Applied (Requires Notes)
-    RESOLVED --> CLOSED : Employee / Admin Closure
-    RESOLVED --> REOPENED : Employee Reports Recurrence
-    CLOSED --> REOPENED : Reopened If Issue Persists
-    REOPENED --> IN_PROGRESS : Re-investigation
+    [*] --> OPEN : Requester Submits Issue
+    OPEN --> ASSIGNED : Support Agent Assigned / Claimed
+    ASSIGNED --> IN_PROGRESS : Agent Begins Investigation
+    ASSIGNED --> OPEN : Ticket Unassigned / Returned to Pool
+    IN_PROGRESS --> RESOLVED : Solution Applied (Mandatory Notes)
+    IN_PROGRESS --> ASSIGNED : Reassigned to Specialist
+    
+    state Creator_Verification {
+        RESOLVED --> CLOSED : Original Creator Verifies & Closes
+        RESOLVED --> REOPENED : Issue Persists — Creator/Admin Reopens
+    }
+    
+    CLOSED --> REOPENED : Problem Recurred (Reopened by Creator/Admin)
+    REOPENED --> IN_PROGRESS : Agent Resumes Work
+    CLOSED --> [*] : Permanent Record (Terminal State)
 ```
+
+### Documented Workflow Stages:
+1. **Creation**: Requester fills ticket details $\to$ uses Smart Priority Advisor.
+2. **Triage**: Ticket created in **`OPEN`** status with dynamic SLA clock.
+3. **Assignment**: Agent self-assigns or Admin allocates $\to$ transitions to **`ASSIGNED`**.
+4. **Investigation**: Agent commences diagnostics $\to$ transitions to **`IN_PROGRESS`**.
+5. **Intelligence Evaluation**: Related ticket clusters and smart escalation scores are assessed in the ticket workspace.
+6. **Technical Resolution**: Agent applies fix and provides mandatory resolution notes $\to$ transitions to **`RESOLVED`**.
+7. **Creator Verification**: The original ticket creator inspects the resolution report:
+   - **Satisfied**: Creator verifies and clicks **Close Ticket** $\to$ transitions to **`CLOSED`**.
+   - **Problem Persists**: Creator clicks **Reopen Ticket** with reason $\to$ transitions to **`REOPENED`** $\to$ resumes in **`IN_PROGRESS`**.
 
 ---
 
 ## 8. Smart Priority Advisor & Dynamic SLA Engine
 
-### SLA Durations (Configurable via Environment):
-* **CRITICAL:** **4 Hours** SLA resolution target.
-* **HIGH:** **8 Hours** SLA resolution target.
-* **MEDIUM:** **24 Hours** SLA resolution target.
-* **LOW:** **72 Hours** SLA resolution target.
+### Configured SLA Targets (`app/core/config.py`):
+* **`CRITICAL`**: **4 Hours** SLA resolution target.
+* **`HIGH`**: **8 Hours** SLA resolution target.
+* **`MEDIUM`**: **24 Hours** SLA resolution target.
+* **`LOW`**: **72 Hours** SLA resolution target.
 
-### Real-Time SLA Status Rules:
-* `ON_TRACK`: Elapsed time $< 75\%$ of SLA duration.
-* `AT_RISK`: Elapsed time $\ge 75\%$ of SLA duration (or $\le 1.0\text{h}$ remaining).
-* `BREACHED`: Current time has passed `due_at` (or resolved after deadline).
-* `MET`: Ticket was marked `RESOLVED` on or before `due_at`.
+### Real-Time SLA Evaluation Rules:
+* **Due Date Formula**: $\text{due\_at} = \text{created\_at} + \text{SLA\_HOURS}[\text{priority}]$.
+* **`ON_TRACK`**: Active ticket where elapsed duration is $< 75\%$ of total SLA window.
+* **`AT_RISK`**: Active ticket where elapsed duration is $\ge 75\%$ of SLA window, or $\le 1.0\text{h}$ remains.
+* **`BREACHED`**: Active ticket past its `due_at` timestamp, or ticket resolved after deadline.
+* **`MET`**: Ticket transitioned to `RESOLVED` on or before `due_at`.
+
+### Smart Priority Advisor Algorithm:
+Calculates objective priority via deterministic blast-radius scoring:
+* **Business Impact**: `LOW` (5), `MEDIUM` (15), `HIGH`/`DEPARTMENT_BLOCKED` (25), `CRITICAL`/`ORG_BLOCKED` (45).
+* **Blast Radius**: 1 user (0), 2–4 users (+5), 5–19 users (+10), 20–49 users (+15), 50–99 users (+25), $\ge 100$ users (+35).
+* **Category Severity**: Security (+20), Network/Access (+10).
+* **Outage / Blocker Flags**: Security incident (+50), Infrastructure outage (+50).
+* **Thresholds**: Score $\ge 75 \implies$ `CRITICAL`, $\ge 35 \implies$ `HIGH`, $\ge 20 \implies$ `MEDIUM`, else `LOW`.
 
 ---
 
-## 9. Local Development Quickstart
+## 9. Incident Intelligence Engines
 
-### Step 1: Clone and Configure Environment
+### 1. Related Ticket Detection (TF-IDF + Cosine Similarity)
+* **Execution**: Evaluated on existing tickets via `GET /api/v1/intelligence/tickets/{ticket_id}/related` within the ticket workspace.
+* **Candidate Pre-Filtering**: Queries up to 100 recent tickets matching the target's `category_id` or active statuses (`OPEN`, `ASSIGNED`, `IN_PROGRESS`, `REOPENED`).
+* **Vectorization**: Pure-Python tokenizer, stop-word elimination, Term Frequency ($\text{TF}$), and smooth Inverse Document Frequency ($\text{IDF}$):
+  $$\text{IDF}(t) = \ln\left(\frac{1 + |D|}{1 + \text{DF}(t)}\right) + 1.0$$
+* **Matching**: Computes cosine similarity between sparse document vectors. Matches meeting the cutoff threshold ($\ge 0.65$) are ranked and returned (top 5 by default).
+
+### 2. Smart Escalation Assessment (Rule-Based Risk Scoring)
+Evaluates multi-factor operational signals to output an explainable integer `risk_score`:
+* **Priority Severity**: `CRITICAL` (+2), `HIGH` (+1).
+* **Blast Radius**: $\ge 20$ affected users (+2), $\ge 10$ affected users (+1).
+* **SLA Pressure**: `BREACHED` (+2), `AT_RISK` (+1).
+* **Cluster Density**: $\ge 5$ related tickets (+2), $\ge 3$ related tickets (+1).
+* **Actionable Recommendations**:
+  * Score `0 – 2`: **`NORMAL`**
+  * Score `3 – 4`: **`MONITOR`**
+  * Score `5+`: **`ESCALATION RECOMMENDED`**
+
+---
+
+## 10. Authentication & Security
+
+* **Credential Security**: Passwords salted and hashed with **Bcrypt**.
+* **Session Management**: Cryptographic **JWT tokens** signed via `HS256` with an **8-hour TTL** (`ACCESS_TOKEN_EXPIRE_MINUTES = 480`).
+* **Input Validation**: Strongly typed Pydantic v2 schemas reject malformed payloads with structured HTTP 422 errors.
+* **Clean Authentication Flow**: Users authenticate strictly via corporate email and password. No hardcoded credentials or demo quick-login buttons exist on the login interface.
+
+---
+
+## 11. Append-Only Audit Trail
+
+* **Audited Operations**: User registration, login, account activation/deactivation, category creation/updates, ticket creation, status changes, assignments, resolutions, closures, reopenings, deletions, and intelligence queries.
+* **Log Schema**: `id`, `user_id`, `action`, `entity_type`, `entity_id`, `timestamp`, `metadata_json`.
+* **Append-Only Guarantees**: Handled via `AuditRepository.log_action`. The API exposes strictly a read-only endpoint (`GET /api/v1/audit-logs`) restricted to administrators. No update or delete endpoints exist.
+* **Audit Trail Subtitle**: *"Append-only chronological logging of critical actions, mutations, and user activities."*
+
+---
+
+## 12. Dashboard Analytics & KPIs
+
+| Metric | API Field | Description |
+|---|---|---|
+| **Mean Time to Resolution (MTTR)** | `avg_resolution_time_hours` | Average elapsed hours from ticket creation to technical resolution. |
+| **First Response Time** | `avg_first_response_time_hours` | Average elapsed hours from ticket creation to first comment by a non-creator. |
+| **Resolution Rate** | `resolution_rate` | $\frac{\text{Resolved} + \text{Closed}}{\text{Total Tickets}} \times 100\%$. |
+| **SLA Breach Rate** | `sla_breach_rate` | Percentage of active/resolved tickets that exceeded SLA deadlines. |
+| **SLA Compliance Rate** | `sla_compliance_rate` | Per-agent compliance percentage ($100 - \text{breach rate}$). |
+| **Caseload Distribution** | `assigned_count`, `in_progress_count` | Real-time active ticket distribution per agent. |
+| **Volume Distribution** | Status, Priority, Category | Aggregated counts and percentages across all dimensions. |
+
+---
+
+## 13. Local Development Quickstart
+
+### Prerequisites:
+* Python 3.10+
+* Node.js 18+ and npm
+* Git
+
+### Step 1: Clone Repository & Configure Environment
 ```bash
 git clone <repository_url>
 cd "TrackIT — Smart IT Service & Issue Management Platform"
@@ -182,20 +287,21 @@ cp .env.example .env
 ```bash
 # Create and activate Python virtual environment
 python -m venv venv
-.\venv\Scripts\Activate.ps1    # On Windows PowerShell
-# source venv/bin/activate      # On Linux/macOS
+.\venv\Scripts\Activate.ps1    # Windows PowerShell
+# source venv/bin/activate      # Linux / macOS
 
 # Install backend dependencies
 pip install -r backend/requirements.txt
 
-# Seed database with demo accounts, categories, and 22 tickets
+# Initialize database schema and seed standard categories and users
 python backend/seed.py
 
-# Start FastAPI server
-python -m uvicorn app.main:app --app-dir backend --reload --port 8000
+# Start FastAPI server on port 8000
+python -m uvicorn app.main:app --app-dir backend --reload --host 127.0.0.1 --port 8000
 ```
-Backend is live at `http://localhost:8000`  
-Interactive Swagger API docs: `http://localhost:8000/docs`
+* **API Documentation (Swagger UI)**: `http://127.0.0.1:8000/docs`
+* **API Documentation (ReDoc)**: `http://127.0.0.1:8000/redoc`
+* **Health Probe**: `http://127.0.0.1:8000/health`
 
 ### Step 3: Frontend Setup
 ```bash
@@ -203,102 +309,72 @@ cd frontend
 npm install
 npm run dev
 ```
-Frontend is live at `http://localhost:5173`
+* **Frontend Web App**: `http://127.0.0.1:5173`
 
 ---
 
-## 10. Docker & Docker Compose Deployment
+## 14. Docker & Containerized Deployment
 
-TrackIT is containerized for seamless production testing:
+TrackIT is fully containerized with multi-stage Docker builds:
+
 ```bash
-# Spin up PostgreSQL 16, FastAPI Backend, and Nginx React Frontend
+# Build and run PostgreSQL 16, FastAPI Backend, and Nginx React Frontend
 docker compose up --build -d
 ```
 
-### Accessing Containers:
-* **Web UI:** `http://localhost:3000`
-* **Backend API & Swagger:** `http://localhost:8000/docs`
-* **Health Check Probe:** `http://localhost:8000/health`
+### Container Endpoints:
+* **Web UI (Nginx)**: `http://localhost:3000`
+* **Backend API & Swagger**: `http://localhost:8000/docs`
+* **Health Check**: `http://localhost:8000/health`
 
-To tear down:
+To stop containers:
 ```bash
 docker compose down -v
 ```
 
 ---
 
-## 11. Automated Testing Suite
+## 15. Automated Testing Suite
 
-The testing suite contains **48 comprehensive test cases** organized across `unit/`, `integration/`, and `api/` suites, validating authentication edge cases, RBAC boundaries, FSM state machine transitions, SLA evaluations (including controllable clock tests), and dashboard aggregations.
+The testing suite contains **69 automated test cases** across unit, integration, and API layers:
 
 ```bash
-# Run complete test suite across all subdirectories
-pytest backend/tests -v
+# Run complete test suite (69 tests)
+pytest -q
 
-# Run unit tests only (SLA & Priority engine)
+# Run unit tests only (SLA, Priority, Related Tickets, Escalation)
 pytest backend/tests/unit -v
 
 # Run integration tests (Multi-table SQL & Dashboard calculations)
 pytest backend/tests/integration -v
 
-# Run API & RBAC tests
+# Run API & RBAC security tests
 pytest backend/tests/api -v
-
-# Generate code coverage report
-pytest backend/tests --cov=app --cov-report=term-missing
 ```
 
----
-
-## 12. API Reference & Postman Collection
-
-TrackIT includes a complete Postman collection: `trackit_postman_collection.json`.
-* **Automatic Token Extraction:** Executing the Login request automatically saves the JWT token into Postman environment variables, authenticating subsequent requests.
-* **Endpoints Included:** Authentication (`/auth/*`), Users (`/users/*`), Categories (`/categories/*`), Tickets (`/tickets/*`), Comments (`/tickets/{id}/comments`), and Analytics (`/dashboard/*`).
-
----
-
-## 13. Demo Login Credentials
-
-*(Pre-seeded for local evaluation via `seed.py`)*
-
-| Role | Email | Password | Intended Workflow |
-| :--- | :--- | :--- | :--- |
-| **Administrator** | `admin@trackit.internal` | `Admin@123` | Full system access, user deactivation, category editing, executive KPIs. |
-| **Support Agent** | `agent.sarah@trackit.internal` | `Agent@123` | Ticket queue triage, assignment, status advancement, resolution. |
-| **Support Agent** | `agent.john@trackit.internal` | `Agent@123` | Secondary agent for workload distribution and reassignment testing. |
-| **Employee** | `emp.alice@trackit.internal` | `Employee@123` | Ticket creation, personal ticket tracking, reopening resolved issues. |
-| **Employee** | `emp.bob@trackit.internal` | `Employee@123` | Testing isolation (cannot view Alice's tickets). |
+### Test Suite Breakdown:
+* **Authentication & JWT Tests** (12 tests): Password hashing, token encoding/decoding, expiration, invalid tokens.
+* **RBAC & Security Tests** (9 tests): Row-level employee ticket isolation, unauthorized assignment prevention, admin user deactivation.
+* **Ticket Lifecycle & Closure Tests** (10 tests): State transitions, mandatory resolution notes, creator-only closure verification, reopen workflows.
+* **API Error Handling Tests** (6 tests): Standardized 400, 401, 403, 404, 409, 422 JSON envelopes.
+* **Incident Intelligence Tests** (5 API tests + 11 Unit tests): Pure-Python vectorizer, candidate selection, cosine ranking, escalation risk score calculation.
+* **SLA & Priority Tests** (12 unit tests): Clock-controlled SLA state evaluation (`ON_TRACK`, `AT_RISK`, `BREACHED`, `MET`), blast-radius scoring.
+* **Dashboard Analytics Tests** (4 integration tests): Aggregations, MTTR, agent caseload, first response time.
 
 ---
 
-## 14. AWS Cloud Deployment Architecture
+## 16. API Documentation & Postman Collection
 
-TrackIT is deployment-ready for Amazon Web Services:
-* **Frontend:** Static React build hosted in private **Amazon S3** and distributed globally via **AWS CloudFront** edge locations with SSL certificate.
-* **Backend:** Containerized FastAPI service running on **AWS ECS Fargate** inside private subnets behind an **Application Load Balancer (ALB)**.
-* **Database:** Managed **Amazon RDS PostgreSQL** (Multi-AZ) with automated daily snapshots.
-* **Secrets:** Injected dynamically using **AWS Secrets Manager**.
-* **Observability:** Application and access logs aggregated in **Amazon CloudWatch**.
+TrackIT includes interactive documentation and a pre-configured Postman collection:
+* **Interactive Swagger UI**: `http://127.0.0.1:8000/docs`
+* **Interactive ReDoc**: `http://127.0.0.1:8000/redoc`
+* **Postman Collection**: `trackit_postman_collection.json` (includes automatic token extraction for subsequent requests).
 
 ---
 
-## 15. Resume-Ready Project Description
+## 17. Documentation Directory
 
-> **TrackIT — Smart IT Service & Issue Management Platform**
-> * Developed an enterprise-grade IT Service Management platform using **Python**, **FastAPI**, **React**, and **PostgreSQL**.
-> * Implemented JWT authentication and server-side **Role-Based Access Control (RBAC)** across Employees, Support Agents, and Administrators.
-> * Designed a normalized 3NF relational database with **SQLAlchemy 2.0** and **Alembic**, eliminating N+1 queries via eager loading (`joinedload`).
-> * Built a deterministic ticket lifecycle state machine and dynamic **SLA compliance engine** (`ON_TRACK`, `AT_RISK`, `BREACHED`).
-> * Engineered a rule-based **Priority Recommendation Engine** assessing blast radius to prevent priority inflation.
-> * Authored **31 automated unit and integration tests** using `pytest`, achieving robust code coverage.
-> * Packaged multi-stage **Docker** containers and established automated CI workflows using **GitHub Actions**.
-
----
-
-## 16. Documentation Directory
-
-For deep-dive architectural, database, and interview review, consult the detailed documentation:
+For deeper architectural, database, and interview reviews, consult the project documentation:
 
 * [Product Requirements & User Stories](file:///USER_STORIES.md)
 * [System Architecture & Clean Architecture](file:///ARCHITECTURE.md)
@@ -307,4 +383,4 @@ For deep-dive architectural, database, and interview review, consult the detaile
 * [Security & Threat Model](file:///SECURITY.md)
 * [Automated Testing Strategy](file:///TESTING.md)
 * [Deployment & Cloud Architecture](file:///DEPLOYMENT.md)
-* [Interview Preparation & 50+ Q&As](file:///docs/interview/10_possible_interview_questions.md)
+* [Interview Preparation & Architectural Q&A](file:///docs/interview/01_project_overview.md)

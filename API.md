@@ -57,7 +57,7 @@ Errors follow a consistent structure matching the contract specified in Section 
 ```bash
 curl -X POST http://localhost:8000/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email": "admin@trackit.internal", "password": "Admin@123"}'
+  -d '{"email": "user@trackit.internal", "password": "your_secure_password"}'
 ```
 
 ---
@@ -75,7 +75,8 @@ curl -X POST http://localhost:8000/api/v1/auth/login \
 | `POST` | `/api/v1/tickets/{id}/assign` | `AGENT`, `ADMIN`| Assign ticket to agent (advances to `ASSIGNED`) |
 | `POST` | `/api/v1/tickets/{id}/status` | `AGENT`, `ADMIN`| Advance ticket lifecycle status |
 | `POST` | `/api/v1/tickets/{id}/resolve`| `AGENT`, `ADMIN`| Resolve ticket (requires `resolution_notes`) |
-| `POST` | `/api/v1/tickets/{id}/reopen` | Creator/Admin | Reopen resolved/closed ticket |
+| `POST` | `/api/v1/tickets/{id}/close`  | Creator Only   | Verify and close resolved ticket |
+| `POST` | `/api/v1/tickets/{id}/reopen` | Creator/Admin  | Reopen resolved/closed ticket |
 | `GET` | `/api/v1/tickets/{id}/history`| Authenticated* | Get chronological status change history |
 | `GET` | `/api/v1/tickets/{id}/comments`| Authenticated* | Get conversation thread messages |
 | `POST` | `/api/v1/tickets/{id}/comments`| Authenticated* | Post comment to ticket thread |
