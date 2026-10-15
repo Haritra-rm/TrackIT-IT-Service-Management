@@ -3,16 +3,13 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { ErrorMessage } from '../components/ErrorMessage';
 import {
-  Shield,
   KeyRound,
   Mail,
   ArrowRight,
-  UserCheck,
   CheckCircle2,
   Clock,
   Sparkles,
   ShieldCheck,
-  Flame,
 } from 'lucide-react';
 
 export const Login = () => {
@@ -40,12 +37,6 @@ export const Login = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleFillDemo = (demoEmail, demoPassword) => {
-    setEmail(demoEmail);
-    setPassword(demoPassword);
-    setError(null);
   };
 
   return (
@@ -190,6 +181,7 @@ export const Login = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   style={{ paddingLeft: '40px' }}
+                  autoComplete="email"
                 />
                 <Mail
                   size={17}
@@ -210,6 +202,7 @@ export const Login = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   style={{ paddingLeft: '40px' }}
+                  autoComplete="current-password"
                 />
                 <KeyRound
                   size={17}
@@ -229,59 +222,7 @@ export const Login = () => {
             </button>
           </form>
 
-          {/* Quick Demo Sign-in for Interview Evaluators */}
-          <div
-            style={{
-              marginTop: '24px',
-              paddingTop: '20px',
-              borderTop: '1px solid var(--border-color)',
-            }}
-          >
-            <div
-              style={{
-                fontSize: '0.72rem',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.06em',
-                color: 'var(--slate-500)',
-                marginBottom: '10px',
-                textAlign: 'center',
-              }}
-            >
-              1-Click Demo Evaluator Profiles
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
-              <button
-                type="button"
-                className="btn btn-sm btn-secondary"
-                style={{ fontSize: '0.76rem', padding: '6px 4px' }}
-                onClick={() => handleFillDemo('admin@trackit.internal', 'Admin@123')}
-                title="Login as Administrator (admin@trackit.internal)"
-              >
-                Admin
-              </button>
-              <button
-                type="button"
-                className="btn btn-sm btn-secondary"
-                style={{ fontSize: '0.76rem', padding: '6px 4px' }}
-                onClick={() => handleFillDemo('agent.sarah@trackit.internal', 'Agent@123')}
-                title="Login as Support Agent (agent.sarah@trackit.internal)"
-              >
-                Agent
-              </button>
-              <button
-                type="button"
-                className="btn btn-sm btn-secondary"
-                style={{ fontSize: '0.76rem', padding: '6px 4px' }}
-                onClick={() => handleFillDemo('emp.alice@trackit.internal', 'Employee@123')}
-                title="Login as Employee (emp.alice@trackit.internal)"
-              >
-                Employee
-              </button>
-            </div>
-          </div>
-
-          <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '0.85rem', color: 'var(--slate-500)' }}>
+          <div style={{ textAlign: 'center', marginTop: '24px', paddingTop: '20px', borderTop: '1px solid var(--border-color)', fontSize: '0.85rem', color: 'var(--slate-500)' }}>
             New organization member?{' '}
             <Link to="/register" style={{ color: 'var(--primary)', fontWeight: 600 }}>
               Create Employee Account
